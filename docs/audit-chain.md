@@ -1,6 +1,6 @@
 # Admin Governance Audit Chain
 
-**Status:** Proposed · **Contract:** `LedgerLensScoreContract` · introduced in `CONTRACT_VERSION` 4.
+**Status:** Proposed · **Contract:** `ScoreGateScoreContract` · introduced in `CONTRACT_VERSION` 4.
 
 The contract maintains a cryptographically verifiable audit trail of all admin governance actions via a Merkle chain. This allows off-chain operators to audit the contract's governance history without replaying every action, and provides on-chain evidence of what state changes have been authorized.
 

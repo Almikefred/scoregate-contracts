@@ -1,6 +1,6 @@
 # Score Attestation — Commitment & Verification Spec
 
-**Status:** Stable · **Contract:** `LedgerLensScoreContract` · introduced in
+**Status:** Stable · **Contract:** `ScoreGateScoreContract` · introduced in
 `CONTRACT_VERSION` 2.
 
 `submit_score` accepts an optional `ScoreAttestation` that lets the off-chain

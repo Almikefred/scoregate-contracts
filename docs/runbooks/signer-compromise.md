@@ -9,7 +9,7 @@ service-signer set specifically.
 
 ## Out of scope
 
-Does not cover the LedgerLens off-chain scoring model, GrantFox/campaign
+Does not cover the ScoreGate off-chain scoring model, GrantFox/campaign
 labeling, or general key-management infrastructure — only the on-chain
 containment/recovery sequence.
 
@@ -104,7 +104,7 @@ scores accepted during the suspected compromise window violate score-range,
 rate-limit, or determinism invariants:
 
 ```bash
-cargo run -p ledgerlens-replay -- \
+cargo run -p scoregate-replay -- \
   --snapshot suspected_window.ndjson \
   --contract-id $CONTRACT_ID
 

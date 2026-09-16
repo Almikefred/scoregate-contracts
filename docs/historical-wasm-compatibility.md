@@ -2,7 +2,7 @@
 
 This suite freezes a production-shaped `ledgerlens-score` release WASM and
 executes it against the consumers compiled from the current workspace. It is a
-regression gate for the stable `ILedgerLensScore` surface, not a replacement
+regression gate for the stable `IScoreGateScore` surface, not a replacement
 for upgrade or migration testing.
 
 ## Fixture and trust assumptions

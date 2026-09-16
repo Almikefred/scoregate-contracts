@@ -23,8 +23,8 @@ NETWORK="${1:?ERROR: network argument is required (testnet|futurenet)}"
 ADMIN_IDENTITY="${2:?ERROR: admin-identity argument is required}"
 SERVICE_ADDRESS="${3:?ERROR: service-address argument is required}"
 
-WASM_PATH="$PROJECT_ROOT/target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
-OPTIMIZED_WASM_PATH="$PROJECT_ROOT/target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm"
+WASM_PATH="$PROJECT_ROOT/target/wasm32-unknown-unknown/release/scoregate_score.wasm"
+OPTIMIZED_WASM_PATH="$PROJECT_ROOT/target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm"
 
 CONTRACT_ID_FILE="$PROJECT_ROOT/.canary-$(echo "$NETWORK" | tr '[:lower:]' '[:upper:]').cid"
 LOG_FILE="$PROJECT_ROOT/.canary-$(echo "$NETWORK" | tr '[:lower:]' '[:upper:]').log"
@@ -54,7 +54,7 @@ esac
 
 # ── Build ─────────────────────────────────────────────────────────────
 log "Building contract for canary deployment (network=$NETWORK)"
-run cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+run cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 
 log "Optimizing WASM"
 run soroban contract optimize --wasm "$WASM_PATH"

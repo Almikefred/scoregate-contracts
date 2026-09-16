@@ -98,7 +98,7 @@ fn extract_documented_interface_version(doc_src: &str) -> &str {
 #[test]
 fn test_interface_spec_contract_version_matches_source() {
     let constants_src =
-        fs::read_to_string("contracts/ledgerlens-score/src/constants.rs")
+        fs::read_to_string("contracts/scoregate-score/src/constants.rs")
             .expect("failed to read constants.rs");
     let code_version = extract_contract_version(&constants_src);
 
@@ -124,7 +124,7 @@ fn test_interface_spec_contract_version_matches_source() {
 #[test]
 fn test_interface_spec_interface_version_matches_source() {
     let lib_src =
-        fs::read_to_string("contracts/ledgerlens-score/src/lib.rs").expect("failed to read lib.rs");
+        fs::read_to_string("contracts/scoregate-score/src/lib.rs").expect("failed to read lib.rs");
     let code_version = extract_interface_version(&lib_src);
 
     let spec_src =

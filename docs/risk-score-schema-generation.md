@@ -7,7 +7,7 @@ Status: Spike complete — recommendation below is ready for an ADR / implementa
 ## Summary
 
 `RiskScore` is defined once in Rust
-(`contracts/ledgerlens-score/src/types.rs`) and today every downstream consumer
+(`contracts/scoregate-score/src/types.rs`) and today every downstream consumer
 re-mirrors it by hand: TypeScript and Python SDKs, the dashboard, and the API
 each maintain their own copy of the field set, order, and the `[0, 10^2]` score
 domain.
@@ -51,7 +51,7 @@ New workspace crate `tools/schema-gen` implements option A end to end.
 
 ```text
 cargo run -p schema-gen                         # native: RiskScore::spec_xdr()
-cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/scoregate_score.wasm
 cargo run -p schema-gen -- --out schemas/       # emit elsewhere
 cargo run -p schema-gen -- --check              # CI drift gate (exit non-zero if stale)
 ```
@@ -71,7 +71,7 @@ Outputs (committed, in `schemas/`):
   `contractspecv0` section. `native_risk_score_struct()` decodes
   `RiskScore::spec_xdr()`; `wasm_risk_score_struct()` uses
   `soroban_spec::read::from_wasm`.
-- **Numeric domain** is sourced from `ledgerlens_score::constants::{MIN_SCORE,
+- **Numeric domain** is sourced from `scoregate_score::constants::{MIN_SCORE,
   MAX_SCORE}` (made `pub` for this purpose; the only contract-crate change, 4
   comment lines). `score`, `confidence`, `benford_score`, `ml_score`,
   `network_score` all emit `minimum: 0`, `maximum: 100` straight from those
@@ -95,13 +95,13 @@ Outputs (committed, in `schemas/`):
   contract), field-order test, nullable-commitment across all three bindings,
   all-ten-fields-required, and a wasm-vs-native identity check run against the
   release WASM.
-- `cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/ledgerlens_score.wasm`
+- `cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/scoregate_score.wasm`
   produces artifacts **byte-identical** to the native path (`diff` clean) — the
   two read pathways agree.
 - `cargo run -p schema-gen -- --check` passes when artifacts are fresh.
 - `cargo clippy -p schema-gen --all-targets -- -D warnings` and
-  `cargo clippy -p ledgerlens-score --all-targets -- -D warnings`: clean.
-- `cargo test -p ledgerlens-score --lib`: 755 passed — the `pub mod constants`
+  `cargo clippy -p scoregate-score --all-targets -- -D warnings`: clean.
+- `cargo test -p scoregate-score --lib`: 755 passed — the `pub mod constants`
   change is behavior-inert.
 - Note: workspace-wide clippy currently fails in the *unrelated*
   `examples/aggregator_shard_pause_example.rs` (`GateOutcome` `contractimpl`
@@ -140,7 +140,7 @@ documentation or semantics source on its own:
    regenerated artifacts (copying the *generated output* — never the Rust
    struct — keeps a single write-side source of truth).
 4. Optional later step: promote the generator loop into the shared GitHub
-   Actions workflow so a merge in `contracts/ledgerlens-score` auto-regenerates
+   Actions workflow so a merge in `contracts/scoregate-score` auto-regenerates
    and opens sync PRs in the consumer repos. See follow-ups.
 
 ## Interaction with `sdk_conformance_fixtures.json`
@@ -167,7 +167,7 @@ not full `RiskScore` payloads. It therefore is **not** validated by the
 - Added: `tools/schema-gen/` (Cargo.toml, `src/lib.rs`, `src/main.rs`),
   `schemas/risk_score.{schema.json,ts,py}`.
 - Changed: root `Cargo.toml` workspace member,
-  `contracts/ledgerlens-score/src/lib.rs` (`pub mod constants`),
+  `contracts/scoregate-score/src/lib.rs` (`pub mod constants`),
   `Cargo.lock`; rustfmt trailing-newline fix in
   `examples/aggregator_shard_pause_example.rs` (required by
   `cargo fmt --all -- --check`).

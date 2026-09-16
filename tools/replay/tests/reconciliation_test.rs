@@ -6,25 +6,25 @@
 
 #[cfg(test)]
 mod reconciliation_tests {
-    use ledgerlens_score::{
-        LedgerLensScoreContract, LedgerLensScoreContractClient, ScoreSubmission,
+    use scoregate_score::{
+        ScoreGateScoreContract, ScoreGateScoreContractClient, ScoreSubmission,
     };
     use soroban_sdk::testutils::{Address as _, Ledger as _};
     use soroban_sdk::{Address, Env, Symbol, Vec as SVec};
 
     const BASE_TS: u64 = 1_700_000_000;
 
-    fn init_contract(env: &Env) -> LedgerLensScoreContractClient<'_> {
+    fn init_contract(env: &Env) -> ScoreGateScoreContractClient<'_> {
         env.mock_all_auths();
-        let id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &id);
+        let id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &id);
         client.initialize(&Address::generate(env), &Address::generate(env));
         client
     }
 
     fn submit_one(
         env: &Env,
-        client: &LedgerLensScoreContractClient,
+        client: &ScoreGateScoreContractClient,
         wallet: &Address,
         pair: &Symbol,
         score: u32,

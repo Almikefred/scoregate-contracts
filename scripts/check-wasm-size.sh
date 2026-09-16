@@ -3,7 +3,7 @@ set -euo pipefail
 
 # Find budget and tolerance from docs
 DOC="docs/wasm-size-budget.md"
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
 
 BUDGET_STR=$(grep "\- \*\*Total Binary Size\*\*:" "$DOC" | grep -oE '[0-9,]+ bytes' | grep -oE '[0-9,]+' | tr -d ',')
 TOLERANCE_STR=$(grep "\- \*\*Tolerance\*\*:" "$DOC" | grep -oE '[0-9.]+%' | tr -d '%' || echo "0")
@@ -18,7 +18,7 @@ TOLERANCE=${TOLERANCE_STR:-0}
 
 if [[ ! -f "$WASM_PATH" ]]; then
   echo "WASM binary not found at $WASM_PATH. Building..."
-  cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+  cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 fi
 
 ACTUAL=$(wc -c < "$WASM_PATH" | tr -d ' ')

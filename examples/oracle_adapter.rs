@@ -1,9 +1,9 @@
-//! Reference integration: registering a price-feed oracle with LedgerLens and
+//! Reference integration: registering a price-feed oracle with ScoreGate and
 //! reading oracle-adjusted effective risk scores.
 //!
 //! This example demonstrates:
 //! 1. Deploying a minimal oracle contract that implements `get_price(asset_pair) -> i128`.
-//! 2. Registering it with LedgerLens via `register_oracle`.
+//! 2. Registering it with ScoreGate via `register_oracle`.
 //! 3. Calling `get_effective_score` and observing that the returned
 //!    `confidence_floor` is elevated when the oracle reports a high price,
 //!    signalling increased market uncertainty to the caller.
@@ -18,7 +18,7 @@
 //! Build it as part of the workspace:
 //!
 //! ```text
-//! cargo build --example oracle_adapter -p ledgerlens-score
+//! cargo build --example oracle_adapter -p scoregate-score
 //! ```
 //!
 //! The key insight: `confidence_floor` in [`EffectiveRiskScore`] lets a
@@ -40,9 +40,9 @@ pub enum OracleKey {
 ///
 /// A production oracle would pull prices from an off-chain feed signed by a
 /// trusted key. This example stores a price that the admin pushes on-chain,
-/// sufficient to demonstrate the LedgerLens integration.
+/// sufficient to demonstrate the ScoreGate integration.
 ///
-/// **The only requirement** LedgerLens places on a registered oracle is that
+/// **The only requirement** ScoreGate places on a registered oracle is that
 /// it exposes a `get_price(asset_pair: Symbol) -> i128` function callable via
 /// cross-contract `invoke_contract`. This contract satisfies that interface.
 #[contract]
@@ -58,7 +58,7 @@ impl ExamplePriceFeedOracle {
 
     /// Returns the stored price for `asset_pair`, or `0` if none has been set.
     ///
-    /// This is the function LedgerLens calls via cross-contract invocation
+    /// This is the function ScoreGate calls via cross-contract invocation
     /// when computing the oracle-adjusted `confidence_floor` in
     /// `get_effective_score`.
     pub fn get_price(env: Env, asset_pair: Symbol) -> i128 {
@@ -71,18 +71,18 @@ impl ExamplePriceFeedOracle {
 
 // ── Integration sketch (pseudo-code, requires a test environment) ─────────────
 //
-// 1. Deploy LedgerLens and the oracle:
+// 1. Deploy ScoreGate and the oracle:
 //
-//    let ll_id  = env.register_contract(None, LedgerLensScoreContract);
+//    let ll_id  = env.register_contract(None, ScoreGateScoreContract);
 //    let orc_id = env.register_contract(None, ExamplePriceFeedOracle);
-//    let ll  = LedgerLensScoreContractClient::new(&env, &ll_id);
+//    let ll  = ScoreGateScoreContractClient::new(&env, &ll_id);
 //    let orc = ExamplePriceFeedOracleClient::new(&env, &orc_id);
 //
 // 2. Push a price into the oracle:
 //
 //    orc.set_price(&symbol_short!("XLM_USDC"), &500_000i128);
 //
-// 3. Register the oracle with LedgerLens (admin call):
+// 3. Register the oracle with ScoreGate (admin call):
 //
 //    ll.register_oracle(&admin_signers, &symbol_short!("XLM_USDC"), &orc_id);
 //

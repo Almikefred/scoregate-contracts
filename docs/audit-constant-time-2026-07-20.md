@@ -8,7 +8,7 @@
 
 ## Scope
 
-Every signature-verification code path in `contracts/ledgerlens-score/src/`:
+Every signature-verification code path in `contracts/scoregate-score/src/`:
 
 1. `verify_attestation` — per-score `ScoreAttestation` verification
 2. `verify_signature` — shared secp256k1 recovery + pubkey comparison

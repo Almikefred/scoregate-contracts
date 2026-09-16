@@ -1,0 +1,43 @@
+[package]
+name = "scoregate-aggregator"
+version = "0.1.0"
+edition = "2021"
+publish = false
+license = "MIT"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+doctest = false
+
+[dependencies]
+soroban-sdk = "21.0.0"
+scoregate-score = { version = "0.1.0", path = "../scoregate-score" }
+
+[dev-dependencies]
+soroban-sdk = { version = "21.0.0", features = ["testutils"] }
+scoregate-test-support = { version = "0.1.0", path = "../scoregate-test-support" }
+
+[features]
+testutils = ["soroban-sdk/testutils"]
+
+# Reference integration showing the recommended fallback pattern when
+# scoregate-aggregator can't meaningfully answer a gate query (no shards
+# registered, or a shard failure) as opposed to a genuine risk-based
+# rejection. Built as a library via:
+# cargo build --example aggregator_gate_example -p scoregate-aggregator
+[[example]]
+name = "aggregator_gate_example"
+path = "../../examples/aggregator_gate_example.rs"
+crate-type = ["lib"]
+
+# Reference integration (degraded-mode counterpart to aggregator_gate_example)
+# showing how a consumer of scoregate-aggregator detects and gracefully
+# handles a partial-shard pause: one shard paused mid-aggregation makes
+# query_risk_gate fail closed to `false` without updating get_last_shard_failure,
+# so the consumer must probe each registered shard's is_paused() directly.
+# Built as a library via:
+# cargo build --example aggregator_shard_pause_example -p scoregate-aggregator
+[[example]]
+name = "aggregator_shard_pause_example"
+path = "../../examples/aggregator_shard_pause_example.rs"
+crate-type = ["lib"]

@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://ledgerlens.dev/schemas/risk_score.schema.json",
+  "$id": "https://scoregate.dev/schemas/risk_score.schema.json",
   "title": "RiskScore",
   "$defs": {
     "RiskScore": {
@@ -72,5 +72,5 @@
       ]
     }
   },
-  "description": "On-chain record of the latest LedgerLens risk assessment for a\nwallet / asset-pair combination."
+  "description": "On-chain record of the latest ScoreGate risk assessment for a\nwallet / asset-pair combination."
 }

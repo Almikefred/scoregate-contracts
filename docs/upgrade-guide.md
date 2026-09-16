@@ -23,7 +23,7 @@ Before proposing an upgrade, complete the following:
 
 ### 2. Verify New WASM Binary
 - [ ] New WASM is built: `cargo build --target wasm32-unknown-unknown --release`
-- [ ] Binary is located at `target/wasm32-unknown-unknown/release/ledgerlens_score.wasm`
+- [ ] Binary is located at `target/wasm32-unknown-unknown/release/scoregate_score.wasm`
 - [ ] WASM hash is computed and noted (see Step 2 below).
 - [ ] WASM is tested in a staging/testnet environment first.
 
@@ -51,15 +51,15 @@ Before proposing an upgrade, complete the following:
 ## Step 1 — Build the New WASM
 
 ```bash
-cd /path/to/ledgerlens-contract
+cd /path/to/scoregate-contract
 cargo build --target wasm32-unknown-unknown --release
 ```yaml
 
-**Output:** `target/wasm32-unknown-unknown/release/ledgerlens_score.wasm`
+**Output:** `target/wasm32-unknown-unknown/release/scoregate_score.wasm`
 
 **Verify the binary exists and is non-empty:**
 ```bash
-ls -lh target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+ls -lh target/wasm32-unknown-unknown/release/scoregate_score.wasm
 
 ---
 
@@ -72,15 +72,15 @@ The `propose_upgrade` function requires a 32-byte SHA-256 hash of the new WASM b
 soroban contract install \
   --network testnet \
   --source-account YOUR_ACCOUNT_ADDRESS \
-  --wasm target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+  --wasm target/wasm32-unknown-unknown/release/scoregate_score.wasm
 
 # Output will show: "WasmHash: abc123...def789" (64 hex characters)
 ```yaml
 
 **Option B: Using sha256sum (if you prefer to compute locally without uploading):**
 ```bash
-sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
-# Output: abc123...def789  ledgerlens_score.wasm
+sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm
+# Output: abc123...def789  scoregate_score.wasm
 
 **Note:** If using `soroban contract install`, the WASM is uploaded to the network immediately. You can then propose the upgrade with confidence that the WASM is available.
 
@@ -98,7 +98,7 @@ The `propose_upgrade` function registers a new WASM to be executed after the del
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ADMIN_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- propose_upgrade \
   --admin-signers '[ADMIN_ADDRESS_1, ADMIN_ADDRESS_2, ...]' \
   --new-wasm-hash WASM_HASH
@@ -130,7 +130,7 @@ The upgrade cannot be executed until the delay has elapsed. Use this window to:
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ACCOUNT_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- get_pending_upgrade
 
 **Response** (if a proposal exists):
@@ -155,7 +155,7 @@ If a critical issue is discovered during the delay window, veto the proposal:
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ADMIN_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- veto_upgrade \
   --admin-signers '[ADMIN_ADDRESS]'
 
@@ -171,7 +171,7 @@ Once the delay has elapsed, execute the upgrade:
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ADMIN_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- execute_upgrade \
   --admin-signers '[ADMIN_ADDRESS_1, ADMIN_ADDRESS_2, ...]'
 ```yaml
@@ -197,7 +197,7 @@ soroban contract invoke \
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ACCOUNT_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- get_score \
   --wallet SOME_WALLET \
   --asset-pair XLM_USDC
@@ -210,7 +210,7 @@ Expected: The function returns a valid score (or `ScoreNotFound` if the wallet h
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ACCOUNT_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- get_version
 ```yaml
 
@@ -253,7 +253,7 @@ If the issue is critical and you cannot afford to wait 48 hours, call `pause`:
 soroban contract invoke \
   --network testnet \
   --source-account YOUR_ADMIN_ADDRESS \
-  --contract-id LEDGERLENS_CONTRACT_ID \
+  --contract-id SCOREGATE_CONTRACT_ID \
   -- pause \
   --admin-signers '[ADMIN_ADDRESS]'
 
@@ -290,5 +290,5 @@ This disables all score submissions and queries (returning `Error::ContractPause
 
 - **Interface specification:** [`docs/interface-spec.md`](interface-spec.md)
 - **Upgrade-related constants:** `MIN_UPGRADE_DELAY_SECS = 172,800` (48 hours), `MAX_UPGRADE_DELAY_SECS = 1,209,600` (14 days)
-- **Contract source:** `contracts/ledgerlens-score/src/lib.rs`
+- **Contract source:** `contracts/scoregate-score/src/lib.rs`
 

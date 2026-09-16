@@ -1,6 +1,6 @@
 //! Aggregator/shard cross-contract integration tests (issue #411).
 //!
-//! `LedgerLensAggregator::query_risk_gate` ANDs the result across every
+//! `ScoreGateAggregator::query_risk_gate` ANDs the result across every
 //! registered shard: if any shard rejects (or the call to it fails outright),
 //! the whole aggregated query fails closed, even when every other shard is
 //! perfectly healthy. That's a real operational scenario — one shard
@@ -8,15 +8,15 @@
 //! unreachable (a bad/unregistered contract id) — and until now nothing
 //! exercised it against a real multi-shard deployment.
 //!
-//! These tests deploy `LedgerLensAggregator` alongside two real
-//! `LedgerLensScoreContract` shards in the same Soroban test `Env` and drive
+//! These tests deploy `ScoreGateAggregator` alongside two real
+//! `ScoreGateScoreContract` shards in the same Soroban test `Env` and drive
 //! the real cross-contract call path (`aggregator.query_risk_gate(...)`
 //! invoking each shard), rather than asserting on the AND logic in isolation.
 
-use ledgerlens_aggregator::{
-    Error as AggregatorError, LedgerLensAggregator, LedgerLensAggregatorClient,
+use scoregate_aggregator::{
+    Error as AggregatorError, ScoreGateAggregator, ScoreGateAggregatorClient,
 };
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, Ledger as _},
@@ -27,9 +27,9 @@ const GATE_THRESHOLD: u32 = 75;
 
 struct Fixture<'a> {
     env: Env,
-    aggregator: LedgerLensAggregatorClient<'a>,
-    shard_a: LedgerLensScoreContractClient<'a>,
-    shard_b: LedgerLensScoreContractClient<'a>,
+    aggregator: ScoreGateAggregatorClient<'a>,
+    shard_a: ScoreGateScoreContractClient<'a>,
+    shard_b: ScoreGateScoreContractClient<'a>,
     wallet: Address,
     pair: Symbol,
 }
@@ -43,17 +43,17 @@ fn setup<'a>() -> Fixture<'a> {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let agg_id = env.register_contract(None, LedgerLensAggregator);
-    let aggregator = LedgerLensAggregatorClient::new(&env, &agg_id);
+    let agg_id = env.register_contract(None, ScoreGateAggregator);
+    let aggregator = ScoreGateAggregatorClient::new(&env, &agg_id);
     let agg_admin = Address::generate(&env);
     aggregator.initialize(&agg_admin);
 
-    let shard_a_id = env.register_contract(None, LedgerLensScoreContract);
-    let shard_a = LedgerLensScoreContractClient::new(&env, &shard_a_id);
+    let shard_a_id = env.register_contract(None, ScoreGateScoreContract);
+    let shard_a = ScoreGateScoreContractClient::new(&env, &shard_a_id);
     shard_a.initialize(&Address::generate(&env), &Address::generate(&env));
 
-    let shard_b_id = env.register_contract(None, LedgerLensScoreContract);
-    let shard_b = LedgerLensScoreContractClient::new(&env, &shard_b_id);
+    let shard_b_id = env.register_contract(None, ScoreGateScoreContract);
+    let shard_b = ScoreGateScoreContractClient::new(&env, &shard_b_id);
     shard_b.initialize(&Address::generate(&env), &Address::generate(&env));
 
     aggregator.add_shard(&shard_a_id);
@@ -130,7 +130,7 @@ fn unreachable_shard_is_rejected_before_gate_queries() {
 /// Documents a mismatch worth flagging rather than silently "fixing" here
 /// (per the issue's own instructions): a *pair-level* pause on a shard
 /// (`set_pair_paused`) does NOT affect `query_risk_gate` at all. Reading
-/// `ledgerlens-score`'s `query_risk_gate_with_confidence`, `is_pair_paused`
+/// `scoregate-score`'s `query_risk_gate_with_confidence`, `is_pair_paused`
 /// is only consulted by the write path (`submit_score`) — the read/gate
 /// path only checks the *global* `is_paused` flag. So, unlike the global
 /// pause scenario above, pausing just the pair leaves the aggregator's gate

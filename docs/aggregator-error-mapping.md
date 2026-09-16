@@ -2,9 +2,9 @@
 
 ## Overview
 
-`ledgerlens-aggregator` maintains its own `Error` enum (defined in
-`contracts/ledgerlens-aggregator/src/lib.rs`) that is independent from the
-`ledgerlens-score` contract's error namespace.  This document describes every
+`scoregate-aggregator` maintains its own `Error` enum (defined in
+`contracts/scoregate-aggregator/src/lib.rs`) that is independent from the
+`scoregate-score` contract's error namespace.  This document describes every
 aggregator error variant and how it relates to the underlying shard-level score
 contract errors.
 
@@ -33,7 +33,7 @@ pub fn get_last_shard_failure(env: Env) -> Option<(Address, u32)>
 ```yaml
 
 - **`Address`** — the contract address of the shard that produced the error.
-- **`u32`** — the raw error code from the `ledgerlens-score::Error` enum,
+- **`u32`** — the raw error code from the `scoregate-score::Error` enum,
   or `0` if the shard invocation itself failed (host-level error, panic, or
   the address does not point to a valid score contract).
 
@@ -91,7 +91,7 @@ deliberate rather than an accident of "well, `false` came back."
 
 ## Score Contract Error Codes (for reference)
 
-The `ledgerlens-score::Error` enum defines the following codes that may appear
+The `scoregate-score::Error` enum defines the following codes that may appear
 as the `u32` value inside a `ShardFailure`:
 
 | Code | Name | Meaning |
@@ -160,7 +160,7 @@ the call panicked).
 | `add_shard` | `Result<(), Error>` | `SelfReference`, `ShardAlreadyRegistered`, `ShardLimitReached` |
 | `remove_shard` | `Result<(), Error>` | `ShardNotRegistered` |
 | `query_risk_gate` | `bool` (infallible) | `false` if no shards, if any healthy shard rejects, or if a shard's call itself fails (recorded via `get_last_shard_failure`) — see the fallback-policy section above to tell these apart |
-| `get_score` | `Result<RiskScore, ledgerlens_score::Error>` | `ScoreNotFound` if no shard has data; per-shard errors stored via `get_last_shard_failure` |
-| `get_aggregate_score` | `Result<AggregateRiskScore, ledgerlens_score::Error>` | `ScoreNotFound` if no shard has data; per-shard errors stored via `get_last_shard_failure` |
+| `get_score` | `Result<RiskScore, scoregate_score::Error>` | `ScoreNotFound` if no shard has data; per-shard errors stored via `get_last_shard_failure` |
+| `get_aggregate_score` | `Result<AggregateRiskScore, scoregate_score::Error>` | `ScoreNotFound` if no shard has data; per-shard errors stored via `get_last_shard_failure` |
 | `get_score_across_shards` | `Vec<(Address, Option<RiskScore>)>` | Individual shard errors appear as `None` in the result vector |
 | `contagion_depth_across_shards` | `u32` | Silently skips erring shards; per-shard errors stored via `get_last_shard_failure` |

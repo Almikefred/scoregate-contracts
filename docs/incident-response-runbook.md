@@ -1,4 +1,4 @@
-# Incident Response Runbook — LedgerLens Score Contract
+# Incident Response Runbook — ScoreGate Score Contract
 
 > **Version:** 1.0 (matching contract version 5, issue #631)  
 > **Audience:** On-call operators and contract admins  

@@ -2,7 +2,7 @@
 
 ## Problem Statement
 
-The `ledgerlens-score` contract uses Soroban `Symbol` (short-symbol form) for the `asset_pair` parameter throughout its interface: `submit_score`, `get_score`, `query_risk_gate`, `query_risk_gate_with_confidence`, `submit_scores_batch`, `set_pair_weight`, `set_pair_paused`, and related functions. Soroban's short-symbol form caps at **9 bytes** (enforced by `MAX_ASSET_PAIR_BYTES = 9` in `constants.rs`).
+The `scoregate-score` contract uses Soroban `Symbol` (short-symbol form) for the `asset_pair` parameter throughout its interface: `submit_score`, `get_score`, `query_risk_gate`, `query_risk_gate_with_confidence`, `submit_scores_batch`, `set_pair_weight`, `set_pair_paused`, and related functions. Soroban's short-symbol form caps at **9 bytes** (enforced by `MAX_ASSET_PAIR_BYTES = 9` in `constants.rs`).
 
 Many real Stellar DEX (SDEX) asset pairs exceed this limit:
 - `XLM_USDC` — 8 chars ✓ (fits)
@@ -155,7 +155,7 @@ For N = 1,000,000: `p ≈ 1.06×10^-10` (still negligible)
 - No SEP proposes a standard for encoding asset pairs into ≤9-byte symbols.
 - The `symbol_short!` macro in soroban-sdk is explicitly for ≤9 ASCII chars and is used for capability tags (e.g. `"gate"`, `"score"`), not asset pairs.
 
-**Conclusion:** This is genuinely an open design space. LedgerLens must define its own convention.
+**Conclusion:** This is genuinely an open design space. ScoreGate must define its own convention.
 
 ---
 

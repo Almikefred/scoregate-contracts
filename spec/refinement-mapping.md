@@ -1,13 +1,13 @@
 # Refinement Mapping: Rust State → TLA+ Variables
 
 > **Issue #754** — Document how concrete storage keys and Rust structs in
-> `contracts/ledgerlens-score/src/` correspond to the abstract model variables
-> in `spec/LedgerLens.tla`.
+> `contracts/scoregate-score/src/` correspond to the abstract model variables
+> in `spec/ScoreGate.tla`.
 
 ## Purpose
 
-The TLA+ specification in `LedgerLens.tla` is an *abstract* model: it captures
-the essential state-machine behaviour of the LedgerLens Soroban contract using
+The TLA+ specification in `ScoreGate.tla` is an *abstract* model: it captures
+the essential state-machine behaviour of the ScoreGate Soroban contract using
 mathematical variables, without committing to Soroban-specific storage layouts
 or XDR encodings.  This document is the **refinement mapping** — the formal
 bridge between the abstract model and the concrete implementation — answering
@@ -28,7 +28,7 @@ A correct refinement mapping means:
 
 ## 1. Scope
 
-The mapping covers the variables that appear in `LedgerLens.tla` as of the
+The mapping covers the variables that appear in `ScoreGate.tla` as of the
 `issue-753-bounded-liveness-checks` commit.  It does **not** cover every
 storage key in the contract — only the subset that the abstract model
 reasons about.  See [`docs/storage-layout.md`](../docs/storage-layout.md) for
@@ -151,8 +151,8 @@ storage — matching the spec's `REVEAL_WINDOW` eviction model.
 
 ## 5. Invariant Correspondence
 
-Each TLA+ invariant in `LedgerLens.cfg` has a direct Rust behavioral
-counterpart, tested in the `contracts/ledgerlens-score/src/` test modules.
+Each TLA+ invariant in `ScoreGate.cfg` has a direct Rust behavioral
+counterpart, tested in the `contracts/scoregate-score/src/` test modules.
 
 | TLA+ invariant | Rust behavioral equivalent | Primary test file(s) |
 |---|---|---|
@@ -175,8 +175,8 @@ counterpart, tested in the `contracts/ledgerlens-score/src/` test modules.
 
 > ⚠️ `INV-LIVE-1` / `INV-LIVE-2` are liveness claims catalogued in
 > [`spec/README.md`](README.md) but are **not** model-checked by TLC: they are
-> absent from both `LedgerLens.tla` and the `INVARIANT` block of
-> `LedgerLens.cfg`. They are kept here because they document real Rust
+> absent from both `ScoreGate.tla` and the `INVARIANT` block of
+> `ScoreGate.cfg`. They are kept here because they document real Rust
 > preconditions, but they do not carry the same machine-checked guarantee as
 > the rows above — see `spec/README.md`.
 
@@ -202,7 +202,7 @@ which the abstract mapping is well-defined.
 ## 7. Known Abstractions and Simplifications
 
 The following aspects of the concrete implementation are deliberately
-abstracted away in `LedgerLens.tla`; this section documents the gap so that
+abstracted away in `ScoreGate.tla`; this section documents the gap so that
 it is not mistaken for an omission.
 
 | Abstracted away | Reason | Safe? |
@@ -228,14 +228,14 @@ When the Rust implementation changes:
 2. **Spec variable renamed**: update the table rows in §2 and the invariant
    correspondence in §5.
 
-3. **New invariant added to `LedgerLens.tla`**: add a row to §5 identifying
+3. **New invariant added to `ScoreGate.tla`**: add a row to §5 identifying
    the Rust behavioral equivalent and the test file that covers it.
 
 4. **New abstraction introduced**: add a row to §7 explaining the gap and
    whether it is safe.
 
 5. **Constant value changed**: update the row in §3 and check whether the
-   TLC model configuration in `LedgerLens.cfg` needs updating (e.g., if
+   TLC model configuration in `ScoreGate.cfg` needs updating (e.g., if
    `DEFAULT_CONSENSUS_EPSILON` changes, verify that `Scores = {0, 50, 80}`
    still produces both passing and failing epsilon clusters).
 
@@ -243,12 +243,12 @@ When the Rust implementation changes:
 
 ## 9. References
 
-- `spec/LedgerLens.tla` — The abstract TLA+ specification
-- `spec/LedgerLens.cfg` — TLC model-checking configuration
+- `spec/ScoreGate.tla` — The abstract TLA+ specification
+- `spec/ScoreGate.cfg` — TLC model-checking configuration
 - `spec/README.md` — Invariant catalogue and TLC run instructions
-- `contracts/ledgerlens-score/src/types.rs` — `DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD` enum definitions (all storage keys)
-- `contracts/ledgerlens-score/src/storage.rs` — Storage read/write helpers (concrete implementations of abstract `score`, `hwm`, `tb_tokens`, etc.)
-- `contracts/ledgerlens-score/src/constants.rs` — All numeric constants referenced in §3
+- `contracts/scoregate-score/src/types.rs` — `DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD` enum definitions (all storage keys)
+- `contracts/scoregate-score/src/storage.rs` — Storage read/write helpers (concrete implementations of abstract `score`, `hwm`, `tb_tokens`, etc.)
+- `contracts/scoregate-score/src/constants.rs` — All numeric constants referenced in §3
 - `docs/storage-layout.md` — Exhaustive storage layout reference (superset of this document)
 - `docs/attestation-spec.md` — Secp256k1 attestation specification (abstracted in §7)
 - `docs/batch-attestation-spec.md` — Merkle-tree batch attestation specification (abstracted in §7)

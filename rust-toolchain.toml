@@ -10,7 +10,7 @@
 # Reproducibility contract:
 #   Any contributor or third party who installs this exact toolchain and builds
 #   from the same source commit using `cargo build --target wasm32-unknown-unknown
-#   --release -p ledgerlens-score --locked` MUST obtain a byte-identical WASM
+#   --release -p scoregate-score --locked` MUST obtain a byte-identical WASM
 #   file.  See docs/reproducible-builds.md for the full verification procedure.
 [toolchain]
 channel  = "1.81.0"

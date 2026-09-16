@@ -6,7 +6,7 @@
 
 ## Context
 
-Storage keys in `contracts/ledgerlens-score/src/types.rs` are partitioned across multiple `#[contracttype]` enums (`DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD`, `DataKeyE`, and `GateDataKey`) rather than a single unified `DataKey` enum.
+Storage keys in `contracts/scoregate-score/src/types.rs` are partitioned across multiple `#[contracttype]` enums (`DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD`, `DataKeyE`, and `GateDataKey`) rather than a single unified `DataKey` enum.
 
 As the contract expanded to support multi-sig governance, commit-reveal consensus, disputes, decay curves, Verkle trees, hyperloglog cardinality, risk gates, volatility tracking, and post-incident recovery snapshots, the number of distinct storage keys grew to nearly 200.
 
@@ -78,7 +78,7 @@ Because Soroban incorporates the type name into the storage key hash:
 
 ## Contributor Decision Guide: Where Should a New Key Go?
 
-When adding a new storage key in `contracts/ledgerlens-score/src/types.rs`, follow this decision rule:
+When adding a new storage key in `contracts/scoregate-score/src/types.rs`, follow this decision rule:
 
 ```
 [Need to add a new storage key]
@@ -117,7 +117,7 @@ Documentation and architectural guidance only. No on-chain storage keys, functio
 
 ## References
 
-- Implementation: [`contracts/ledgerlens-score/src/types.rs`](../../contracts/ledgerlens-score/src/types.rs)
+- Implementation: [`contracts/scoregate-score/src/types.rs`](../../contracts/scoregate-score/src/types.rs)
 - Storage Layout Reference: [`docs/storage-layout.md`](../storage-layout.md)
 - Code Review Checklist: [`docs/review-checklists.md`](../review-checklists.md)
-- Issue Reference: [#416](https://github.com/Ledger-Lenz/Ledgerlens-contract/issues/416), [#420](https://github.com/Ledger-Lenz/Ledgerlens-contract/issues/420)
+- Issue Reference: [#416](https://github.com/Ledger-Lenz/scoregate-contract/issues/416), [#420](https://github.com/Ledger-Lenz/scoregate-contract/issues/420)

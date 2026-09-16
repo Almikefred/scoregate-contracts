@@ -1,7 +1,7 @@
 //! Consumer integration fixtures for stale-oracle fallback modes (issue #717).
 //!
 //! Documents and asserts the concrete behavior of `query_risk_gate` and
-//! `query_risk_gate_with_confidence` when LedgerLens is in one of four
+//! `query_risk_gate_with_confidence` when ScoreGate is in one of four
 //! degraded states that a real downstream protocol must handle:
 //!
 //! 1. **Paused, no failover** — primary circuit-breaker tripped, no secondary
@@ -21,7 +21,7 @@
 //! issue #717). The `setup_*` helpers document the exact deploy/config steps
 //! a real AMM or lending contract must replicate.
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use mock_amm::{FailPolicy as AmmFailPolicy, MockAmm, MockAmmClient, MockAmmError};
 use mock_lending::{MockLending, MockLendingClient, MockLendingError};
 use soroban_sdk::{
@@ -32,17 +32,17 @@ use soroban_sdk::{
 
 const GATE_THRESHOLD: u32 = 75;
 const MIN_CONFIDENCE: u32 = 50;
-/// LedgerLens hard-coded failover staleness window (seconds).  Mirrors the
-/// constant in `contracts/ledgerlens-score/src/constants.rs` so fixtures here
+/// ScoreGate hard-coded failover staleness window (seconds).  Mirrors the
+/// constant in `contracts/scoregate-score/src/constants.rs` so fixtures here
 /// stay honest without importing a private module.
 const FAILOVER_STALENESS_WINDOW: u64 = 3_600;
 
 // ── Shared helpers ────────────────────────────────────────────────────────────
 
-/// Deploy a fresh LedgerLens instance with `admin` and `service` already set.
-fn deploy_ledgerlens(env: &Env) -> (LedgerLensScoreContractClient, Address) {
-    let id = env.register_contract(None, LedgerLensScoreContract);
-    let client = LedgerLensScoreContractClient::new(env, &id);
+/// Deploy a fresh ScoreGate instance with `admin` and `service` already set.
+fn deploy_scoregate(env: &Env) -> (ScoreGateScoreContractClient, Address) {
+    let id = env.register_contract(None, ScoreGateScoreContract);
+    let client = ScoreGateScoreContractClient::new(env, &id);
     let admin = Address::generate(env);
     let service = Address::generate(env);
     client.initialize(&admin, &service);
@@ -52,13 +52,13 @@ fn deploy_ledgerlens(env: &Env) -> (LedgerLensScoreContractClient, Address) {
 /// Submit a score, advancing ledger time past the 1-hour submission cooldown.
 fn submit_score(
     env: &Env,
-    ledgerlens: &LedgerLensScoreContractClient,
+    scoregate: &ScoreGateScoreContractClient,
     wallet: &Address,
     score: u32,
     confidence: u32,
 ) {
     env.ledger().with_mut(|l| l.timestamp += 3_601);
-    ledgerlens.submit_score(
+    scoregate.submit_score(
         &Vec::new(env),
         wallet,
         &symbol_short!("XLM_USDC"),
@@ -72,12 +72,12 @@ fn submit_score(
     );
 }
 
-/// Deploy mock-amm wired to the given LedgerLens instance.
-fn deploy_amm<'a>(env: &'a Env, ledgerlens_id: &Address) -> MockAmmClient<'a> {
+/// Deploy mock-amm wired to the given ScoreGate instance.
+fn deploy_amm<'a>(env: &'a Env, scoregate_id: &Address) -> MockAmmClient<'a> {
     let amm_id = env.register_contract(None, MockAmm);
     let amm = MockAmmClient::new(env, &amm_id);
     let admin = Address::generate(env);
-    amm.initialize(&admin, ledgerlens_id, &GATE_THRESHOLD);
+    amm.initialize(&admin, scoregate_id, &GATE_THRESHOLD);
     amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -89,11 +89,11 @@ fn deploy_amm<'a>(env: &'a Env, ledgerlens_id: &Address) -> MockAmmClient<'a> {
     amm
 }
 
-/// Deploy mock-lending wired to the given LedgerLens instance.
-fn deploy_lending<'a>(env: &'a Env, ledgerlens_id: &Address) -> MockLendingClient<'a> {
+/// Deploy mock-lending wired to the given ScoreGate instance.
+fn deploy_lending<'a>(env: &'a Env, scoregate_id: &Address) -> MockLendingClient<'a> {
     let lending_id = env.register_contract(None, MockLending);
     let lending = MockLendingClient::new(env, &lending_id);
-    lending.initialize(&Address::generate(env), ledgerlens_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
+    lending.initialize(&Address::generate(env), scoregate_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
     lending
 }
 
@@ -110,7 +110,7 @@ fn amm_swap_blocked_when_primary_paused_and_no_failover() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
     let amm = deploy_amm(&env, &primary_id);
 
     let wallet = Address::generate(&env);
@@ -132,7 +132,7 @@ fn lending_borrow_blocked_when_primary_paused_and_no_failover() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
     let lending = deploy_lending(&env, &primary_id);
 
     let wallet = Address::generate(&env);
@@ -158,8 +158,8 @@ fn amm_swap_blocked_when_failover_score_is_stale() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
-    let (secondary, _secondary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
+    let (secondary, _secondary_id) = deploy_scoregate(&env);
     let secondary_id = secondary.address.clone();
 
     let amm = deploy_amm(&env, &primary_id);
@@ -198,8 +198,8 @@ fn amm_swap_allowed_via_healthy_failover_when_primary_paused() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
-    let (secondary, _secondary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
+    let (secondary, _secondary_id) = deploy_scoregate(&env);
     let secondary_id = secondary.address.clone();
 
     let amm = deploy_amm(&env, &primary_id);
@@ -228,7 +228,7 @@ fn amm_swap_blocked_for_wallet_with_no_score_on_active_oracle() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (_primary, primary_id) = deploy_ledgerlens(&env);
+    let (_primary, primary_id) = deploy_scoregate(&env);
     let amm = deploy_amm(&env, &primary_id);
 
     let wallet = Address::generate(&env); // never scored
@@ -243,7 +243,7 @@ fn lending_borrow_blocked_for_wallet_with_no_score_on_active_oracle() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (_primary, primary_id) = deploy_ledgerlens(&env);
+    let (_primary, primary_id) = deploy_scoregate(&env);
     let lending = deploy_lending(&env, &primary_id);
 
     let wallet = Address::generate(&env);
@@ -266,7 +266,7 @@ fn amm_provide_liquidity_blocked_when_score_passes_but_confidence_insufficient()
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
     let amm = deploy_amm(&env, &primary_id);
 
     let provider = Address::generate(&env);
@@ -283,7 +283,7 @@ fn lending_borrow_blocked_when_score_passes_but_confidence_insufficient() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
     let lending = deploy_lending(&env, &primary_id);
 
     let wallet = Address::generate(&env);
@@ -296,7 +296,7 @@ fn lending_borrow_blocked_when_score_passes_but_confidence_insufficient() {
 // ── Fixture: Gate resumes after unpause ───────────────────────────────────────
 //
 // Validates the round-trip: pause → fail closed → unpause → previous signal
-// honoured again.  Downstream protocols that cache "is LedgerLens paused"
+// honoured again.  Downstream protocols that cache "is ScoreGate paused"
 // must refresh on unpause; this fixture provides the canonical test for that
 // behavior.
 
@@ -306,7 +306,7 @@ fn amm_swap_resumes_after_primary_unpaused() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, primary_id) = deploy_ledgerlens(&env);
+    let (primary, primary_id) = deploy_scoregate(&env);
     let amm = deploy_amm(&env, &primary_id);
 
     let wallet = Address::generate(&env);

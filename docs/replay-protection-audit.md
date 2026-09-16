@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-An audit of the two independent commit-reveal mechanisms in `contracts/ledgerlens-score` was conducted to evaluate replay attack vulnerability, scope binding, and storage isolation.
+An audit of the two independent commit-reveal mechanisms in `contracts/scoregate-score` was conducted to evaluate replay attack vulnerability, scope binding, and storage isolation.
 
 **Audit Outcome:** **No gap found.**
 All tested replay attack vectors (replaying in later reveal windows, replaying across asset pairs, replaying twice, and cross-mechanism replay) are correctly rejected by existing storage scoping keys, key deletion post-reveal, and storage namespace isolation.
@@ -57,7 +57,7 @@ All tested replay attack vectors (replaying in later reveal windows, replaying a
 
 ## 3. Replay Test Scenarios & Results
 
-All test scenarios were implemented in [`contracts/ledgerlens-score/src/test_replay_audit.rs`](file:///home/mxr/Documents/Ledgerlens-contract/contracts/ledgerlens-score/src/test_replay_audit.rs). 
+All test scenarios were implemented in [`contracts/scoregate-score/src/test_replay_audit.rs`](file:///home/mxr/Documents/scoregate-contract/contracts/scoregate-score/src/test_replay_audit.rs). 
 
 Tests **1a, 1b, 2a, and 3b** represent legitimate adversarial replay attempts. Tests **2b and 3a** function as runtime storage isolation correctness checks demonstrating that independent storage entries operate concurrently without state interference.
 

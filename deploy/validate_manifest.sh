@@ -6,7 +6,7 @@
 # before any build or deploy command runs. Meant to be sourced by deploy.sh.
 #
 # Bounds below mirror the on-chain constraints in
-# contracts/ledgerlens-score/src/constants.rs — keep them in sync.
+# contracts/scoregate-score/src/constants.rs — keep them in sync.
 readonly MANIFEST_MIN_COOLDOWN_SECS=60
 readonly MANIFEST_MAX_COOLDOWN_SECS=86400
 readonly MANIFEST_MIN_UPGRADE_DELAY_SECS=172800

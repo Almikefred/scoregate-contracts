@@ -28,12 +28,12 @@ jobs = 1
 
 [profile.shard-a]
 include_source_files = [
-    "contracts/ledgerlens-score/src/zk_range_proof.rs",
-    "contracts/ledgerlens-score/src/verkle.rs",
+    "contracts/scoregate-score/src/zk_range_proof.rs",
+    "contracts/scoregate-score/src/verkle.rs",
 ]
 test_workspace = false
 additional_cargo_args = [
-    "--package", "ledgerlens-score",
+    "--package", "scoregate-score",
     "--test", "test_zk_range_proof",
     "--test", "test_verkle",
 ]
@@ -45,7 +45,7 @@ timeout = 120
 
 [profile.shard-b]
 include_source_files = [
-    "contracts/ledgerlens-score/src/parameter_governance.rs",
+    "contracts/scoregate-score/src/parameter_governance.rs",
 ]
 include_re = [
     "validate_parameter_value",
@@ -61,7 +61,7 @@ include_re = [
 ]
 test_workspace = false
 additional_cargo_args = [
-    "--package", "ledgerlens-score",
+    "--package", "scoregate-score",
     "--test", "test_upgrade",
     "--test", "test_parameter_governance",
     "--test", "test_param_timelock",
@@ -75,7 +75,7 @@ timeout = 120
 
 [profile.shard-c]
 include_source_files = [
-    "contracts/ledgerlens-score/src/storage.rs",
+    "contracts/scoregate-score/src/storage.rs",
 ]
 include_re = [
     "set_cooldown_secs",
@@ -93,7 +93,7 @@ include_re = [
 ]
 test_workspace = false
 additional_cargo_args = [
-    "--package", "ledgerlens-score",
+    "--package", "scoregate-score",
     "--test", "test_rate_limit",
     "--test", "test_cooldown",
     "--test", "test_cooldown_period",
@@ -109,7 +109,7 @@ timeout = 120
 
 [profile.shard-d]
 include_source_files = [
-    "contracts/ledgerlens-score/src/storage.rs",
+    "contracts/scoregate-score/src/storage.rs",
 ]
 include_re = [
     "set_historical_max_score",
@@ -122,7 +122,7 @@ include_re = [
 ]
 test_workspace = false
 additional_cargo_args = [
-    "--package", "ledgerlens-score",
+    "--package", "scoregate-score",
     "--test", "test_score_floor",
     "--test", "test_is_score_floor_enabled",
 ]
@@ -134,10 +134,10 @@ timeout = 120
 
 [profile.shard-e]
 include_source_files = [
-    "contracts/ledgerlens-score/src/zk_range_proof.rs",
-    "contracts/ledgerlens-score/src/verkle.rs",
-    "contracts/ledgerlens-score/src/parameter_governance.rs",
-    "contracts/ledgerlens-score/src/storage.rs",
+    "contracts/scoregate-score/src/zk_range_proof.rs",
+    "contracts/scoregate-score/src/verkle.rs",
+    "contracts/scoregate-score/src/parameter_governance.rs",
+    "contracts/scoregate-score/src/storage.rs",
 ]
 include_re = [
     "validate_parameter_value",
@@ -172,7 +172,7 @@ include_re = [
 ]
 test_workspace = false
 additional_cargo_args = [
-    "--package", "ledgerlens-score",
+    "--package", "scoregate-score",
     "--test", "test_zk_range_proof",
     "--test", "test_verkle",
     "--test", "test_upgrade",

@@ -1,9 +1,9 @@
 # SDK Conformance Fixtures
 
-LedgerLens SDKs for Rust, TypeScript, and Python must agree on the observable
+ScoreGate SDKs for Rust, TypeScript, and Python must agree on the observable
 contract in `tests/composability/sdk_conformance_fixtures.json`.
 
-This repository actively enforces this fixture against the deployed `ledgerlens-score` contract via the `tests/composability/tests/sdk_conformance.rs` test suite. The test runs on every PR as part of the `cargo test --workspace` flow to prevent behavioral drift.
+This repository actively enforces this fixture against the deployed `scoregate-score` contract via the `tests/composability/tests/sdk_conformance.rs` test suite. The test runs on every PR as part of the `cargo test --workspace` flow to prevent behavioral drift.
 
 When a fixture case needs to change (e.g., adding a new error code or boundary condition):
 1. Update `tests/composability/sdk_conformance_fixtures.json` in this repository.
@@ -13,9 +13,9 @@ When a fixture case needs to change (e.g., adding a new error code or boundary c
 ## Contract
 
 The fixtures exercise production-shaped consumers, not direct happy-path calls
-into LedgerLens. Each consumer validates amount first, requires admin
+into ScoreGate. Each consumer validates amount first, requires admin
 authorization for oracle/configuration rotation, checks optional contract
-version compatibility, rejects stale scores, then asks the LedgerLens gate.
+version compatibility, rejects stale scores, then asks the ScoreGate gate.
 Read-only decisions must not create persistent writes.
 
 Transport failure is never reported as low risk. Integrators must configure one
@@ -33,7 +33,7 @@ Risk rejections remain distinct from operational failures:
 | `allow` | Score exists, is fresh, below threshold, and meets confidence/version requirements. |
 | `reject_high_risk` | Score is missing, embargoed, equal/above threshold, or the gate returned false. |
 | `reject_low_confidence` | Score is below threshold but below the consumer confidence floor. |
-| `reject_stale` | Score age exceeds `max_staleness_secs` or LedgerLens reports it stale. |
+| `reject_stale` | Score age exceeds `max_staleness_secs` or ScoreGate reports it stale. |
 | `oracle_unavailable` | Cross-contract call trapped, target is missing, or response cannot be decoded. |
 | `unsupported_version` | Oracle version is lower than the configured required version. |
 
@@ -44,7 +44,7 @@ contract-version floor. New clients against old contracts must either run with
 that compatibility setting or reject with `unsupported_version`; they must not
 guess by treating a failed version probe as safe.
 
-No LedgerLens core ABI, storage key, event, error discriminant, or
+No ScoreGate core ABI, storage key, event, error discriminant, or
 cryptographic transcript changes are introduced by these fixtures. The added
 types and errors are mock-consumer local.
 
@@ -60,7 +60,7 @@ oracle is healthy.
 
 ## PR Design Notes
 
-Trust assumptions: consumers trust the configured LedgerLens contract ID and
+Trust assumptions: consumers trust the configured ScoreGate contract ID and
 the configured admin, not arbitrary callback contracts.
 
 Authorization boundary: only the mock fixture admin can rotate the oracle or
@@ -75,7 +75,7 @@ unsupported version, malformed response, and unauthorized configuration all map
 to explicit outcomes.
 
 Rejected alternatives: collapsing every failure to a boolean was rejected
-because transport failure could masquerade as low risk; adding LedgerLens core
+because transport failure could masquerade as low risk; adding ScoreGate core
 ABI/storage changes was rejected because the existing gate and score APIs
 already expose the needed signals.
 

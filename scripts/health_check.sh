@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Read-only health check for a deployed ledgerlens-score contract instance.
+# Read-only health check for a deployed scoregate-score contract instance.
 #
 # Runs only view calls (get_admin, get_service, is_paused, get_version,
 # is_service_alive, get_pending_upgrade) — no state-changing invocation is
@@ -41,7 +41,7 @@ check() {
   fi
 }
 
-echo "== ledgerlens-score health check: $CONTRACT_ID on $NETWORK =="
+echo "== scoregate-score health check: $CONTRACT_ID on $NETWORK =="
 
 check "admin address"    invoke get_admin
 check "service address"  invoke get_service

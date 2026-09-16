@@ -24,7 +24,7 @@ resolution.
 
 - [ ] Every new/changed threshold has an explicit `threshold <= set.len()` check — this is
       already asserted post-mutation by
-      [`invariants::invariant_check`](../contracts/ledgerlens-score/src/invariants.rs), but a new
+      [`invariants::invariant_check`](../contracts/scoregate-score/src/invariants.rs), but a new
       governance path must call it (in test builds) or be covered by an equivalent test.
 - [ ] Signer/admin set changes respect the relevant `MAX_*` cap (`MAX_SERVICE_SIGNERS`,
       `MAX_ADMIN_SIGNERS`) and return the matching `*SetFull` error rather than truncating
@@ -139,7 +139,7 @@ Anything touching `propose_upgrade` / `execute_upgrade` / `veto_upgrade`, the WA
 
 ## Composability changes
 
-`query_risk_gate*`, `supports_interface`, anything `ledgerlens-aggregator` or the mock
+`query_risk_gate*`, `supports_interface`, anything `scoregate-aggregator` or the mock
 integrations (`mock-amm`, `mock-lending`) depend on.
 
 - [ ] Every gate function's signature, return type, and fail-closed behavior is unchanged, *or*
@@ -157,7 +157,7 @@ integrations (`mock-amm`, `mock-lending`) depend on.
       `AggregateRiskScore`, etc.), any new field is appended at the end, never inserted or
       reordered — see
       [`docs/interface-versioning-policy.md` § 3.3](interface-versioning-policy.md#33-what-constitutes-a-new-field-vs-a-changed-struct).
-- [ ] `ledgerlens-aggregator` changes that read from shards still check
+- [ ] `scoregate-aggregator` changes that read from shards still check
       `shard_supports_required_interface` before trusting a shard's response, and still apply the
       configured `ConflictPolicy` rather than special-casing one shard.
 - [ ] The AMM/lending mock integrations (`contracts/mock-amm`, `contracts/mock-lending`) still

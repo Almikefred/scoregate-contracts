@@ -40,7 +40,7 @@ class TestTraceabilityReport(unittest.TestCase):
         self.assertEqual(res.returncode, 0)
         with open(out_path, "r") as f:
             text = f.read()
-        self.assertIn("=== LedgerLens Traceability Report ===", text)
+        self.assertIn("=== ScoreGate Traceability Report ===", text)
         self.assertIn("Status: PASSED", text)
 
     def test_corrupt_json_input(self):

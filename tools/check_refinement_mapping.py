@@ -3,7 +3,7 @@
 exists in the contract source.
 
 Background (issue #928): `spec/refinement-mapping.md` maps every TLA+ variable
-and action in `spec/LedgerLens.tla` to concrete Rust storage keys and entry
+and action in `spec/ScoreGate.tla` to concrete Rust storage keys and entry
 points.  It drifted once already — it referenced a `finalize_consensus`
 function that never existed (the real entry point is `submit_consensus_score`)
 — and nothing caught it, because no CI step ever compared the document against
@@ -11,7 +11,7 @@ the code.  This script closes that gap with a cheap, always-on symbol-existence
 check:
 
   * every `DataKeyX::Variant` storage key named in the document must exist as a
-    variant of that enum in `contracts/ledgerlens-score/src/types.rs`;
+    variant of that enum in `contracts/scoregate-score/src/types.rs`;
   * every function call (`name(...)`) must exist as a `fn` (public or private)
     in the contract sources;
   * every `SCREAMING_CONSTANT` must exist as a `const` in the contract sources;
@@ -20,7 +20,7 @@ check:
 
 Identifiers that come from the TLA+ side of the mapping (spec variables,
 constants, actions, invariants and operators) are exempted automatically by
-parsing `spec/LedgerLens.tla`, so the document can name spec entities freely
+parsing `spec/ScoreGate.tla`, so the document can name spec entities freely
 without the check tripping.  A small, documented skip-list covers Soroban SDK
 types/methods and a handful of prose terms.
 
@@ -46,10 +46,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 MAPPING = ROOT / "spec" / "refinement-mapping.md"
-TLA_SPEC = ROOT / "spec" / "LedgerLens.tla"
+TLA_SPEC = ROOT / "spec" / "ScoreGate.tla"
 RUST_DIRS = [
-    ROOT / "contracts" / "ledgerlens-score" / "src",
-    ROOT / "contracts" / "ledgerlens-aggregator" / "src",
+    ROOT / "contracts" / "scoregate-score" / "src",
+    ROOT / "contracts" / "scoregate-aggregator" / "src",
 ]
 
 # ── Skip-list of identifiers that are legitimately referenced by the mapping
@@ -69,14 +69,14 @@ SKIP_LIST = {
     # TLA+ standard operators (imported via EXTENDS FiniteSets, Integers)
     "Cardinality", "TRUE", "FALSE", "None", "Some",
     # TLC model-configuration keywords (used when the mapping cites
-    # LedgerLens.cfg sections)
+    # ScoreGate.cfg sections)
     "INVARIANT", "PROPERTY", "CONSTRAINT", "SPECIFICATION", "CONSTANTS",
     # spec-side set-element placeholders (the spec declares `Wallets`, `Signers`
     # as constants; the mapping writes the singular element types)
     "Wallet", "Signer",
     # liveness claims catalogued in spec/README.md (INV-LIVE-1/2) that are NOT
-    # model-checked by TLC — they are absent from both LedgerLens.tla and
-    # LedgerLens.cfg, and the mapping's §5 flags them as such.
+    # model-checked by TLC — they are absent from both ScoreGate.tla and
+    # ScoreGate.cfg, and the mapping's §5 flags them as such.
     "SubmitEnabledWhenConditionsMet", "ScoreFloorDoesNotBlockAllScores",
     # prose
     "SHA256", "XDR",
@@ -193,8 +193,8 @@ def build_tla_index() -> set:
             if m:
                 known.add(m.group(1))
 
-    # MODULE name (e.g. `MODULE LedgerLens`), so file references like
-    # `LedgerLens.tla` resolve on the spec side as well.
+    # MODULE name (e.g. `MODULE ScoreGate`), so file references like
+    # `ScoreGate.tla` resolve on the spec side as well.
     m = re.search(r"MODULE\s+([A-Za-z_]\w*)", tla)
     if m:
         known.add(m.group(1))

@@ -1,10 +1,10 @@
-# `ILedgerLensScore` — Interface Versioning & Migration Policy
+# `IScoreGateScore` — Interface Versioning & Migration Policy
 
 **Status:** Adopted · **Effective:** v3.0.0+
 
 ## 1. Purpose
 
-`ILedgerLensScore` is the canonical composability surface that external Soroban
+`IScoreGateScore` is the canonical composability surface that external Soroban
 protocols (AMMs, lending markets, DEX aggregators) integrate against. Every
 breaking change to this surface requires integrators to update and re-deploy
 their contracts — an expensive, error-prone process with no warning.
@@ -105,7 +105,7 @@ version integers:
 
 ```rust
 // ✅ Recommended: feature-detect at runtime
-let client = LedgerLensScoreContractClient::new(&env, &contract_id);
+let client = ScoreGateScoreContractClient::new(&env, &contract_id);
 if client.supports_interface(&symbol_short!("gate")) {
     // This deployment supports query_risk_gate.
 }

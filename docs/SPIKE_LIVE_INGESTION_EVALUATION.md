@@ -2,13 +2,13 @@
 
 ## Executive Summary
 
-This spike evaluates whether `tools/replay` (and forensic tools in the LedgerLens ecosystem) should gain a mode that directly ingests live or historical streaming transaction/event data from Soroban RPC / Horizon endpoints, and how to maintain **deterministic, reproducible-bundle guarantees** while doing so.
+This spike evaluates whether `tools/replay` (and forensic tools in the ScoreGate ecosystem) should gain a mode that directly ingests live or historical streaming transaction/event data from Soroban RPC / Horizon endpoints, and how to maintain **deterministic, reproducible-bundle guarantees** while doing so.
 
 ### Key Finding & Recommendation
 Directly streaming live, non-deterministic network data into the replay execution harness during forensic analysis compromises determinism guarantees and introduces operational fragility during active incidents.
 
 We strongly recommend a **"Snapshot Exporter" companion tool architecture** ("Snapshot-then-Replay"). In this design:
-1. An off-chain exporter CLI tool (e.g. `scripts/fetch_testnet_snapshot.py` or a dedicated `ledgerlens-snapshot` CLI) pulls transaction/event history for a specified contract and ledger/time window from Soroban RPC/Horizon into a immutable, frozen **NDJSON snapshot file**.
+1. An off-chain exporter CLI tool (e.g. `scripts/fetch_testnet_snapshot.py` or a dedicated `scoregate-snapshot` CLI) pulls transaction/event history for a specified contract and ledger/time window from Soroban RPC/Horizon into a immutable, frozen **NDJSON snapshot file**.
 2. The snapshot file is hashed (SHA-256) and verified.
 3. The existing deterministic `tools/replay` harness ingests this frozen snapshot as input, producing deterministic, bit-for-bit reproducible evidence bundles and cryptographic hashes for incident response and third-party audits.
 

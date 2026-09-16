@@ -1,6 +1,6 @@
-# LedgerLens Contract Event Schema Reference
+# ScoreGate Contract Event Schema Reference
 
-This document provides the complete event schema for all LedgerLens contract events. Use this for implementing event indexers, monitoring systems, and alert pipelines.
+This document provides the complete event schema for all ScoreGate contract events. Use this for implementing event indexers, monitoring systems, and alert pipelines.
 
 ## Event Versioning
 
@@ -385,5 +385,5 @@ Link related events for context:
 ## See Also
 
 - [Operator Alerts Guide](./operator-alerts.md)
-- [Event Emission Code](../contracts/ledgerlens-score/src/events.rs)
-- [Event Tests](../contracts/ledgerlens-score/src/test_batch_error_events.rs)
+- [Event Emission Code](../contracts/scoregate-score/src/events.rs)
+- [Event Tests](../contracts/scoregate-score/src/test_batch_error_events.rs)

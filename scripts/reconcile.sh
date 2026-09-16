@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# reconcile.sh — Post-incident score reconciliation for LedgerLens.
+# reconcile.sh — Post-incident score reconciliation for ScoreGate.
 #
 # Compares on-chain contract state against an off-chain pipeline NDJSON dump
 # and produces a deterministic reconciliation report (JSON) listing mismatches

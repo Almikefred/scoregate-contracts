@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 publish = false
 license = "MIT"
-description = "Minimal mock AMM that gates swaps on LedgerLens's query_risk_gate, used by the cross-contract composability integration suite"
+description = "Minimal mock AMM that gates swaps on ScoreGate's query_risk_gate, used by the cross-contract composability integration suite"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
@@ -12,7 +12,7 @@ doctest = false
 
 [dependencies]
 soroban-sdk = "21.0.0"
-ledgerlens-score = { version = "0.1.0", path = "../ledgerlens-score" }
+scoregate-score = { version = "0.1.0", path = "../scoregate-score" }
 
 [dev-dependencies]
 soroban-sdk = { version = "21.0.0", features = ["testutils"] }

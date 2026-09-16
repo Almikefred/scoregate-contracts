@@ -295,10 +295,10 @@ checksum = "1d07550c9036bf2ae0c684c4297d503f838287c83c53686d05370d0e139ae570"
 name = "composability-tests"
 version = "0.1.0"
 dependencies = [
- "ledgerlens-aggregator",
- "ledgerlens-score",
  "mock-amm",
  "mock-lending",
+ "scoregate-aggregator",
+ "scoregate-score",
  "serde",
  "serde_json",
  "sha2",
@@ -845,10 +845,10 @@ name = "invocation-fuzzer"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ledgerlens-aggregator",
- "ledgerlens-score",
  "mock-amm",
  "mock-lending",
+ "scoregate-aggregator",
+ "scoregate-score",
  "serde",
  "serde_json",
  "soroban-sdk",
@@ -930,34 +930,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "ledgerlens-aggregator"
-version = "0.1.0"
-dependencies = [
- "ledgerlens-score",
- "ledgerlens-test-support",
- "soroban-sdk",
-]
-
-[[package]]
-name = "ledgerlens-score"
-version = "0.1.0"
-dependencies = [
- "criterion",
- "k256",
- "ledgerlens-test-support",
- "libm",
- "soroban-sdk",
- "subtle",
-]
-
-[[package]]
-name = "ledgerlens-test-support"
-version = "0.1.0"
-dependencies = [
- "soroban-sdk",
-]
-
-[[package]]
 name = "libc"
 version = "0.2.186"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -994,7 +966,7 @@ dependencies = [
 name = "mock-amm"
 version = "0.1.0"
 dependencies = [
- "ledgerlens-score",
+ "scoregate-score",
  "soroban-sdk",
 ]
 
@@ -1002,7 +974,7 @@ dependencies = [
 name = "mock-lending"
 version = "0.1.0"
 dependencies = [
- "ledgerlens-score",
+ "scoregate-score",
  "soroban-sdk",
 ]
 
@@ -1289,7 +1261,7 @@ name = "replay"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ledgerlens-score",
+ "scoregate-score",
  "serde",
  "serde_json",
  "sha2",
@@ -1347,10 +1319,38 @@ name = "schema-gen"
 version = "0.1.0"
 dependencies = [
  "anyhow",
- "ledgerlens-score",
+ "scoregate-score",
  "serde_json",
  "soroban-sdk",
  "soroban-spec",
+]
+
+[[package]]
+name = "scoregate-aggregator"
+version = "0.1.0"
+dependencies = [
+ "scoregate-score",
+ "scoregate-test-support",
+ "soroban-sdk",
+]
+
+[[package]]
+name = "scoregate-score"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "k256",
+ "libm",
+ "scoregate-test-support",
+ "soroban-sdk",
+ "subtle",
+]
+
+[[package]]
+name = "scoregate-test-support"
+version = "0.1.0"
+dependencies = [
+ "soroban-sdk",
 ]
 
 [[package]]

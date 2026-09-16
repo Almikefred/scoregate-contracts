@@ -2,7 +2,7 @@
 # Direct tests for tools/check_error_discriminants.sh.
 #
 # The checker compares the `Error` enum discriminants in
-# contracts/ledgerlens-score/src/errors.rs at two git refs and fails if any
+# contracts/scoregate-score/src/errors.rs at two git refs and fails if any
 # existing discriminant was renamed, removed, or renumbered (the append-only
 # rule in CONTRIBUTING.md). These tests build a scratch git repo with a
 # controlled errors.rs history and assert the checker both accepts legitimate
@@ -20,7 +20,7 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 # ── Scratch repo with a canned errors.rs history ──────────────────────────
 REPO="$TMP_DIR/repo"
-ERRORS="$REPO/contracts/ledgerlens-score/src/errors.rs"
+ERRORS="$REPO/contracts/scoregate-score/src/errors.rs"
 mkdir -p "$(dirname "$ERRORS")"
 git -C "$REPO" init -q
 git -C "$REPO" config user.email "checker-test@example.com"
@@ -233,17 +233,17 @@ run_checker "adding only pub const aliases passes" 0 "$BASE_SHA" "$HEAD_SHA"
 assert_output_contains "Error discriminant stability check passed (0 new discriminant(s) added)."
 
 # ── Base ref without the file is skipped, not failed ───────────────────────
-git -C "$REPO" rm -q contracts/ledgerlens-score/src/errors.rs
+git -C "$REPO" rm -q contracts/scoregate-score/src/errors.rs
 NO_FILE_SHA="$(commit_state remove-errors-file)"
 run_checker "missing errors.rs at base is skipped" 0 "$NO_FILE_SHA" "$BASE_SHA"
-assert_output_contains "found no discriminants in contracts/ledgerlens-score/src/errors.rs"
+assert_output_contains "found no discriminants in contracts/scoregate-score/src/errors.rs"
 
 # ── Base ref with an empty enum is skipped, not failed ─────────────────────
 mkdir -p "$(dirname "$ERRORS")"
 printf 'pub enum Error {}\n' > "$ERRORS"
 EMPTY_SHA="$(commit_state empty-enum)"
 run_checker "empty Error enum at base is skipped" 0 "$EMPTY_SHA" "$BASE_SHA"
-assert_output_contains "found no discriminants in contracts/ledgerlens-score/src/errors.rs"
+assert_output_contains "found no discriminants in contracts/scoregate-score/src/errors.rs"
 
 echo ""
 echo "$pass passed, $fail failed"

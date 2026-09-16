@@ -1,6 +1,6 @@
 use anyhow::{anyhow, bail, Context, Result};
-use ledgerlens_aggregator::{LedgerLensAggregator, LedgerLensAggregatorClient};
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_aggregator::{ScoreGateAggregator, ScoreGateAggregatorClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use mock_amm::{FailPolicy as AmmFailPolicy, MockAmm, MockAmmClient};
 use mock_lending::{MockLending, MockLendingClient};
 use serde::{Deserialize, Serialize};
@@ -173,10 +173,10 @@ struct Fixture<'a> {
     env: Env,
     admin: Address,
     wallet: Address,
-    score: LedgerLensScoreContractClient<'a>,
+    score: ScoreGateScoreContractClient<'a>,
     amm: MockAmmClient<'a>,
     lending: MockLendingClient<'a>,
-    aggregator: LedgerLensAggregatorClient<'a>,
+    aggregator: ScoreGateAggregatorClient<'a>,
     score_id: Address,
     amm_id: Address,
     lending_id: Address,
@@ -192,8 +192,8 @@ fn setup<'a>() -> Fixture<'a> {
     env.budget().reset_unlimited();
     env.ledger().with_mut(|ledger| ledger.timestamp = START_TIMESTAMP);
 
-    let score_id = env.register_contract(None, LedgerLensScoreContract);
-    let score = LedgerLensScoreContractClient::new(&env, &score_id);
+    let score_id = env.register_contract(None, ScoreGateScoreContract);
+    let score = ScoreGateScoreContractClient::new(&env, &score_id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
     score.initialize(&admin, &service);
@@ -214,8 +214,8 @@ fn setup<'a>() -> Fixture<'a> {
     let lending = MockLendingClient::new(&env, &lending_id);
     lending.initialize(&admin, &score_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
 
-    let aggregator_id = env.register_contract(None, LedgerLensAggregator);
-    let aggregator = LedgerLensAggregatorClient::new(&env, &aggregator_id);
+    let aggregator_id = env.register_contract(None, ScoreGateAggregator);
+    let aggregator = ScoreGateAggregatorClient::new(&env, &aggregator_id);
     aggregator.initialize(&admin);
     aggregator.add_shard(&score_id);
 

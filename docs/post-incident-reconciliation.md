@@ -51,7 +51,7 @@ appears in either source and classifies it as one of:
 
 ```bash
 # From the `core` repository or its output store:
-python -m ledgerlens.export_scores \
+python -m scoregate.export_scores \
   --since <INCIDENT_START_UNIX> \
   --until <INCIDENT_END_UNIX> \
   --output pipeline_records.ndjson
@@ -101,7 +101,7 @@ while IFS= read -r line; do
   confidence=$(echo "$line" | jq -r '.pipeline_confidence')
   timestamp=$(echo "$line" | jq -r '.pipeline_timestamp')
   stellar contract invoke \
-    --id "$CONTRACT_ID" --source ledgerlens_service --network "$NETWORK" -- \
+    --id "$CONTRACT_ID" --source scoregate_service --network "$NETWORK" -- \
     submit_score \
     --signers '[]' \
     --wallet "$wallet" --asset_pair "$pair" \
@@ -162,7 +162,7 @@ Run the reconciliation workflow after every incident and on a weekly schedule:
               --contract-id "$CONTRACT_ID" \
               --rpc-url "$RPC_URL" \
               --network "$NETWORK" \
-              > /var/log/ledgerlens/reconcile_$(date +\%F).json
+              > /var/log/scoregate/reconcile_$(date +\%F).json
 ```yaml
 
 ---

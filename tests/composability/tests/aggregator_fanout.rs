@@ -1,13 +1,13 @@
 //! End-to-end integration test: aggregator fan-out across shards with
 //! divergent configuration (issue #431).
 //!
-//! Deploys 3 `ledgerlens-score` shards with different scores, counterparty
+//! Deploys 3 `scoregate-score` shards with different scores, counterparty
 //! links, and delegation setups, then exercises every aggregator read
 //! function against the heterogeneous multi-shard environment.
 
-use ledgerlens_aggregator::{LedgerLensAggregator, LedgerLensAggregatorClient, SplitBrainStatus};
-use ledgerlens_score::{
-    Error as ScoreError, LedgerLensScoreContract, LedgerLensScoreContractClient,
+use scoregate_aggregator::{ScoreGateAggregator, ScoreGateAggregatorClient, SplitBrainStatus};
+use scoregate_score::{
+    Error as ScoreError, ScoreGateScoreContract, ScoreGateScoreContractClient,
 };
 use soroban_sdk::{
     symbol_short,
@@ -19,10 +19,10 @@ const GATE_THRESHOLD: u32 = 60;
 
 struct Fixture<'a> {
     env: Env,
-    aggregator: LedgerLensAggregatorClient<'a>,
-    shard1: LedgerLensScoreContractClient<'a>,
-    shard2: LedgerLensScoreContractClient<'a>,
-    shard3: LedgerLensScoreContractClient<'a>,
+    aggregator: ScoreGateAggregatorClient<'a>,
+    shard1: ScoreGateScoreContractClient<'a>,
+    shard2: ScoreGateScoreContractClient<'a>,
+    shard3: ScoreGateScoreContractClient<'a>,
 }
 
 fn setup<'a>() -> Fixture<'a> {
@@ -30,8 +30,8 @@ fn setup<'a>() -> Fixture<'a> {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let agg_id = env.register_contract(None, LedgerLensAggregator);
-    let aggregator = LedgerLensAggregatorClient::new(&env, &agg_id);
+    let agg_id = env.register_contract(None, ScoreGateAggregator);
+    let aggregator = ScoreGateAggregatorClient::new(&env, &agg_id);
     let agg_admin = Address::generate(&env);
     aggregator.initialize(&agg_admin);
 
@@ -46,9 +46,9 @@ fn setup<'a>() -> Fixture<'a> {
     Fixture { env, aggregator, shard1, shard2, shard3 }
 }
 
-fn register_score_shard<'a>(env: &Env) -> (Address, LedgerLensScoreContractClient<'a>) {
-    let id = env.register_contract(None, LedgerLensScoreContract);
-    let client = LedgerLensScoreContractClient::new(env, &id);
+fn register_score_shard<'a>(env: &Env) -> (Address, ScoreGateScoreContractClient<'a>) {
+    let id = env.register_contract(None, ScoreGateScoreContract);
+    let client = ScoreGateScoreContractClient::new(env, &id);
     let admin = Address::generate(env);
     let service = Address::generate(env);
     client.initialize(&admin, &service);
@@ -57,7 +57,7 @@ fn register_score_shard<'a>(env: &Env) -> (Address, LedgerLensScoreContractClien
 
 fn submit_score(
     env: &Env,
-    shard: &LedgerLensScoreContractClient,
+    shard: &ScoreGateScoreContractClient,
     wallet: &Address,
     score: u32,
     timestamp: u64,
@@ -78,7 +78,7 @@ fn submit_score(
 
 fn submit_aggregate_score(
     env: &Env,
-    shard: &LedgerLensScoreContractClient,
+    shard: &ScoreGateScoreContractClient,
     wallet: &Address,
     aggregate_score: u32,
 ) {

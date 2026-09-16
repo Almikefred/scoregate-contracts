@@ -1,8 +1,8 @@
 # Cross-contract invocation fuzzer
 
 The `invocation-fuzzer` workspace tool exercises the real Soroban
-cross-contract paths from the mock AMM, mock lending market, and LedgerLens
-aggregator into `ledgerlens-score`. It is deterministic, bounded, and intended
+cross-contract paths from the mock AMM, mock lending market, and ScoreGate
+aggregator into `scoregate-score`. It is deterministic, bounded, and intended
 for both pull-request smoke coverage and longer local campaigns.
 
 ## Security invariant and oracle
@@ -12,7 +12,7 @@ For every generated operation sequence:
 1. Replaying the same versioned JSON campaign from a fresh environment produces
    the same ordered operation outcomes and final score fingerprint.
 2. A gate query, rejected payload, malformed invocation, or unavailable
-   dependency cannot modify the observed LedgerLens score or emit a contract
+   dependency cannot modify the observed ScoreGate score or emit a contract
    event. Score changes are permitted only for an explicit `submit_score`
    setup operation.
 3. Integrators fail closed for missing, unsafe, low-confidence, malformed, and

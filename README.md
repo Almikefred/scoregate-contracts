@@ -1,14 +1,14 @@
-# LedgerLens Contract 🔍
+# ScoreGate Contract 🔍
 
 [![Built on Stellar](https://img.shields.io/badge/Built%20on-Stellar-blue?logo=stellar)](https://stellar.org)
 [![Soroban Smart Contracts](https://img.shields.io/badge/Smart%20Contracts-Soroban-purple)](https://soroban.stellar.org)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-Soroban smart contract that serves as the on-chain risk-score registry for **LedgerLens**, a hybrid fraud detection system for the Stellar DEX combining Benford's Law digit analysis with ensemble machine learning.
+Soroban smart contract that serves as the on-chain risk-score registry for **ScoreGate**, a hybrid fraud detection system for the Stellar DEX combining Benford's Law digit analysis with ensemble machine learning.
 
 ## Overview
 
-LedgerLens detects wash trading and artificial volume on the Stellar Decentralised Exchange (SDEX) by analysing trade data with statistical (Benford's Law) and machine learning techniques. The off-chain detection pipeline computes a **LedgerLens Risk Score (0-100)** for wallets and asset pairs, and this contract acts as the **on-chain truth layer** for those scores — making fraud signals composable with other Soroban protocols (AMMs, lending platforms, DEX aggregators) without relying on an external oracle.
+ScoreGate detects wash trading and artificial volume on the Stellar Decentralised Exchange (SDEX) by analysing trade data with statistical (Benford's Law) and machine learning techniques. The off-chain detection pipeline computes a **ScoreGate Risk Score (0-100)** for wallets and asset pairs, and this contract acts as the **on-chain truth layer** for those scores — making fraud signals composable with other Soroban protocols (AMMs, lending platforms, DEX aggregators) without relying on an external oracle.
 
 New to the terminology below? [`docs/glossary.md`](docs/glossary.md) defines every term precisely
 against the actual implementation — including a few (**shard**, **finality**, **attestation**,
@@ -17,9 +17,9 @@ blockchain usage.
 
 ## Features
 
-- **On-Chain Risk Score Registry**: Stores the latest LedgerLens risk score, flags, confidence, and timestamp per wallet/asset-pair
+- **On-Chain Risk Score Registry**: Stores the latest ScoreGate risk score, flags, confidence, and timestamp per wallet/asset-pair
 - **Replay Forensics**: The replay harness can emit a deterministic incident evidence bundle that packages transactions, events, configuration snapshots, issue references, and hashes for audits and incident response.
-- **Authorized Score Submission**: Only the authorised LedgerLens off-chain service account can write scores
+- **Authorized Score Submission**: Only the authorised ScoreGate off-chain service account can write scores
 - **Composable Read Access**: Any Soroban contract can query risk scores to gate suspicious activity via `query_risk_gate` (score-only) or `query_risk_gate_with_confidence` (score + confidence floor) — both infallible, side-effect free, and safe to call directly inside another protocol's guard clause
 - **Benford & ML Flags**: Distinguishes between statistical anomaly flags and ML classifier flags
 - **Confidence Scoring**: Each risk score carries a model confidence value (0-100)
@@ -39,7 +39,7 @@ blockchain usage.
 │                  LAYER 2: DETECTION ENGINE                   │
 │  Benford's Law Anomaly Engine + Ensemble ML Models           │
 │  (Random Forest, XGBoost, LightGBM)                          │
-│             → LedgerLens Risk Score (0-100)                  │
+│             → ScoreGate Risk Score (0-100)                  │
 └──────────────────────────┬──────────────────────────────────┘
                            │
                            ▼
@@ -67,13 +67,13 @@ blockchain usage.
 The replay harness in [tools/replay/src/main.rs](tools/replay/src/main.rs) consumes NDJSON snapshots, replays them into the contract, and emits a deterministic incident evidence bundle. The bundle is designed to be reproducible across reruns and is useful for incident response, operator handoffs, and audit trails. Operators can add issue references with `--issue-ref` flags; the bundle includes transaction evidence, emitted events, a config snapshot, and SHA-256 hashes for each section plus an overall bundle hash.
 
 ### `initialize(admin: Address, service: Address)`
-One-time setup. Sets the admin (who can rotate the service address) and the LedgerLens off-chain service account authorised to submit scores.
+One-time setup. Sets the admin (who can rotate the service address) and the ScoreGate off-chain service account authorised to submit scores.
 
 ### `submit_score(signers: Vec<Address>, wallet: Address, asset_pair: Symbol, score: u32, benford_flag: bool, ml_flag: bool, timestamp: u64, confidence: u32, model_version: u32, attestation_input: Option<ScoreAttestationInput>)`
-Called by the authorised LedgerLens off-chain service to register a computed risk score on-chain. Requires authorization from the configured LedgerLens service account (or, under the M-of-N multisig model, from `threshold` of the listed `signers`). `score` and `confidence` must be in the range 0-100. `attestation_input` wraps both the per-score secp256k1 attestation and the optional threshold attestation — see [Score Attestation](#score-attestation) and [Threshold Attestation]().
+Called by the authorised ScoreGate off-chain service to register a computed risk score on-chain. Requires authorization from the configured ScoreGate service account (or, under the M-of-N multisig model, from `threshold` of the listed `signers`). `score` and `confidence` must be in the range 0-100. `attestation_input` wraps both the per-score secp256k1 attestation and the optional threshold attestation — see [Score Attestation](#score-attestation) and [Threshold Attestation]().
 
 ### `get_score(wallet: Address, asset_pair: Symbol) -> RiskScore`
-Read-only function callable by any Soroban contract. Returns the most recent LedgerLens risk score and metadata for a given wallet and asset pair.
+Read-only function callable by any Soroban contract. Returns the most recent ScoreGate risk score and metadata for a given wallet and asset pair.
 
 ### `get_score_count(wallet: Address, asset_pair: Symbol) -> u32`
 Read-only function callable by any account or contract. Returns the total number of score submissions ever recorded for `wallet` / `asset_pair`. Unlike `get_score_history` (which caps at `HISTORY_MAX_DEPTH`), this counter is never truncated, giving off-chain services a cheap O(1) signal to distinguish newly monitored wallets from those with a long history.
@@ -106,7 +106,7 @@ Read-only lookup of the configured weight for `asset_pair`.
 
 ### `submit_scores_batch(submissions: Vec<ScoreSubmission>) -> BatchResult`
 
-Called by the authorised LedgerLens off-chain service to register multiple risk scores in a single invocation. The service account authorises once for the whole batch.
+Called by the authorised ScoreGate off-chain service to register multiple risk scores in a single invocation. The service account authorises once for the whole batch.
 
 Returns a `BatchResult` containing per-entry outcomes so the caller knows exactly which entries succeeded and why any failed. Entries with out-of-range `score` (>100) or `confidence` (>100), zero `timestamp`, or that arrive before the submission cooldown has elapsed, are recorded as rejected with an appropriate `rejection_code`.
 
@@ -343,7 +343,7 @@ client.set_pair_paused(&symbol_short!("XLM_USDC"), &false);   // resume
 
 ## Upgrade Governance
 
-Soroban contracts can be upgraded by the admin via `update_current_contract_wasm`, which replaces the **entire** contract logic in a single transaction. Without governance, one admin key — or a compromised one — could silently install a backdoor or disable a security check with no warning. LedgerLens gates every upgrade behind an on-chain **time-lock** so the community always gets a mandatory window to inspect and react.
+Soroban contracts can be upgraded by the admin via `update_current_contract_wasm`, which replaces the **entire** contract logic in a single transaction. Without governance, one admin key — or a compromised one — could silently install a backdoor or disable a security check with no warning. ScoreGate gates every upgrade behind an on-chain **time-lock** so the community always gets a mandatory window to inspect and react.
 
 **The flow:**
 
@@ -378,7 +378,7 @@ The time-lock is computed from `env.ledger().timestamp()` (deterministic, not ca
 
 ## Rate Limiting
 
-A compromised or malfunctioning off-chain service could otherwise flood the contract with submissions for the same `(wallet, asset_pair)`, exhausting storage rent, overwhelming indexers, and poisoning the score signal with rapid fluctuations. LedgerLens enforces a configurable **cooldown** between accepted submissions for any given wallet/asset-pair to bound that blast radius.
+A compromised or malfunctioning off-chain service could otherwise flood the contract with submissions for the same `(wallet, asset_pair)`, exhausting storage rent, overwhelming indexers, and poisoning the score signal with rapid fluctuations. ScoreGate enforces a configurable **cooldown** between accepted submissions for any given wallet/asset-pair to bound that blast radius.
 
 **The flow:**
 
@@ -482,7 +482,7 @@ Detection: integrators can feature-detect before using it —
 
 ```rust
 let cap = soroban_sdk::Symbol::new(&env, "batch_attested");
-let client = LedgerLensScoreContractClient::new(&env, &contract_id);
+let client = ScoreGateScoreContractClient::new(&env, &contract_id);
 if client.supports_interface(&cap) {
     // Use the attested batch path (one signature per batch, per-entry proofs).
 } else {
@@ -494,15 +494,15 @@ Full specification (off-chain tree-construction algorithm, on-chain verification
 
 ## Composability
 
-LedgerLens is only useful if other protocols can actually *act* on its scores. A risk score that lives in isolation is a dashboard widget; a risk score that an AMM, a lending market, or a DEX aggregator can read mid-transaction is a shared fraud-prevention layer for the entire Stellar DeFi ecosystem.
+ScoreGate is only useful if other protocols can actually *act* on its scores. A risk score that lives in isolation is a dashboard widget; a risk score that an AMM, a lending market, or a DEX aggregator can read mid-transaction is a shared fraud-prevention layer for the entire Stellar DeFi ecosystem.
 
-The problem with composing on a raw getter is fragility. If every integrator reverse-engineers `get_score` and decodes the `RiskScore` struct by hand, then the day we add a field or change an error code, every downstream protocol breaks silently. So LedgerLens exposes a **stable, versioned composability interface** — `ILedgerLensScore` — as the canonical integration point. It is fully specified in [`docs/interface-spec.md`](docs/interface-spec.md); the headline function is `query_risk_gate`.
+The problem with composing on a raw getter is fragility. If every integrator reverse-engineers `get_score` and decodes the `RiskScore` struct by hand, then the day we add a field or change an error code, every downstream protocol breaks silently. So ScoreGate exposes a **stable, versioned composability interface** — `IScoreGateScore` — as the canonical integration point. It is fully specified in [`docs/interface-spec.md`](docs/interface-spec.md); the headline function is `query_risk_gate`.
 
 ### Why a dedicated gate function?
 
 A guard clause inside someone else's contract has hard requirements that a normal getter doesn't meet:
 
-- **It must never panic.** A panic in a cross-contract call traps the *caller's* transaction. If LedgerLens could panic, an attacker could craft inputs that disable the AMM's risk guard — or simply burn its gas. So `query_risk_gate` returns a plain `bool` and is engineered to be infallible.
+- **It must never panic.** A panic in a cross-contract call traps the *caller's* transaction. If ScoreGate could panic, an attacker could craft inputs that disable the AMM's risk guard — or simply burn its gas. So `query_risk_gate` returns a plain `bool` and is engineered to be infallible.
 - **It must fail closed.** Because the answer is a single `bool`, the "we have no score for this wallet" case has to collapse to one value — and that value is `false`. Unknown wallets are treated as *potentially risky*, not waved through.
 - **It must be cheap and side-effect free.** It is a pure read that doesn't even extend storage TTL, so calling it from a hot path is safe.
 
@@ -512,14 +512,14 @@ Here is the entire integration — drop `query_risk_gate` into your swap guard a
 
 ```rust
 fn swap(env: Env, user: Address, amount: i128) -> Result<(), AmmError> {
-    // The LedgerLens contract ID you trust, stored at init time.
+    // The ScoreGate contract ID you trust, stored at init time.
     let llens_contract: Address = env
         .storage()
         .instance()
-        .get(&DataKey::LedgerLens)
+        .get(&DataKey::ScoreGate)
         .ok_or(AmmError::NotConfigured)?;
 
-    let client = LedgerLensScoreContractClient::new(&env, &llens_contract);
+    let client = ScoreGateScoreContractClient::new(&env, &llens_contract);
 
     // Note: no `try_`, no `?`, no error handling — the gate cannot fail.
     let is_safe = client.query_risk_gate(&user, &symbol_short!("XLM_USDC"), &75u32);
@@ -532,7 +532,7 @@ fn swap(env: Env, user: Address, amount: i128) -> Result<(), AmmError> {
 }
 ```
 
-A complete, compiling reference contract lives in [`examples/amm_gate.rs`](examples/amm_gate.rs) (build it with `cargo build --example amm_gate -p ledgerlens-score`). For versioning, error-code stability, threshold selection, and caching guidance, read the full [interface specification](docs/interface-spec.md).
+A complete, compiling reference contract lives in [`examples/amm_gate.rs`](examples/amm_gate.rs) (build it with `cargo build --example amm_gate -p scoregate-score`). For versioning, error-code stability, threshold selection, and caching guidance, read the full [interface specification](docs/interface-spec.md).
 
 ### Gated liquidity provision
 
@@ -564,7 +564,7 @@ your own pause flag is active.
 
 ## Security Features
 
-1. **Authorization Checks**: Only the authorised LedgerLens service account can submit scores
+1. **Authorization Checks**: Only the authorised ScoreGate service account can submit scores
 2. **Read-Only Composability**: `get_score` is permissionless and side-effect free, safe for any contract to call
 3. **Bounded Values**: Scores and confidence are constrained to the 0-100 range
 4. **Overflow Protection**: Safe math operations with overflow checks
@@ -589,7 +589,7 @@ cargo test
 
 ```bash
 cargo build --target wasm32-unknown-unknown --release
-soroban contract optimize --wasm target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+soroban contract optimize --wasm target/wasm32-unknown-unknown/release/scoregate_score.wasm
 ```
 
 ### 2. Deploy to Testnet
@@ -608,7 +608,7 @@ See [`docs/deployment-manifests.md`](docs/deployment-manifests.md).
 ```bash
 soroban contract invoke \
   --id <CONTRACT_ID> \
-  --source ledgerlens_service \
+  --source scoregate_service \
   --network testnet \
   -- \
   submit_score \
@@ -650,13 +650,13 @@ soroban contract invoke \
 ├── deploy/manifests/                   ← Reviewed environment deployment manifests
 ├── docs/
 │   ├── deployment-manifests.md         ← Manifest schema and toolchain drift checks
-│   └── interface-spec.md               ← ILedgerLensScore composability spec
+│   └── interface-spec.md               ← IScoreGateScore composability spec
 │   └── contract-build-lints.md         ← WASM-only dead-code detection policy
-│   └── ledgerlens-score-module-ownership.md ← Score module ownership map
+│   └── scoregate-score-module-ownership.md ← Score module ownership map
 ├── examples/
 │   └── amm_gate.rs                     ← Reference AMM integration (query_risk_gate)
 ├── contracts/
-│   └── ledgerlens-score/
+│   └── scoregate-score/
 │       ├── Cargo.toml
 │       └── src/
 │           ├── lib.rs                  ← Contract entrypoints
@@ -675,7 +675,7 @@ soroban contract invoke \
 
 ## Organization Architecture
 
-LedgerLens is split across **6 repositories**. This section orients anyone (or any AI agent) working in this contract repo on how it connects to the rest of the organization.
+ScoreGate is split across **6 repositories**. This section orients anyone (or any AI agent) working in this contract repo on how it connects to the rest of the organization.
 
 ### The Six Repositories
 
@@ -686,7 +686,7 @@ LedgerLens is split across **6 repositories**. This section orients anyone (or a
 | **`core`** | Python | Detection engine — Benford's Law analysis + ensemble ML models (Random Forest, XGBoost, LightGBM); consumes `data`, produces risk scores |
 | **`api`** | Python (FastAPI) | Public REST API — serves risk scores and alerts; reads from `core` output and from this contract; the only repo with direct write access to this contract |
 | **`dashboard`** | JS/TS (React) | Web dashboard — visualises risk scores and alerts via `api` |
-| **`contract`** *(this repo)* | Rust (Soroban) | On-chain truth layer — `ledgerlens-score` Soroban contract storing the latest risk score per wallet/asset-pair |
+| **`contract`** *(this repo)* | Rust (Soroban) | On-chain truth layer — `scoregate-score` Soroban contract storing the latest risk score per wallet/asset-pair |
 
 ### End-to-End Data Flow
 
@@ -716,7 +716,7 @@ LedgerLens is split across **6 repositories**. This section orients anyone (or a
 
 ### The Shared `RiskScore` Type — Source of Truth for Cross-Repo Types
 
-The single most important cross-repo agreement is the **`RiskScore`** shape, defined canonically in this repo at `contracts/ledgerlens-score/src/types.rs`:
+The single most important cross-repo agreement is the **`RiskScore`** shape, defined canonically in this repo at `contracts/scoregate-score/src/types.rs`:
 
 ```rust
 pub struct RiskScore {
@@ -743,12 +743,12 @@ pub struct RiskScore {
 | Function | Caller | Auth required | Used by |
 |---|---|---|---|
 | `initialize(admin, service)` | deployer | admin (one-time) | deployment tooling only |
-| `submit_score(signers, wallet, asset_pair, score, benford_flag, ml_flag, timestamp, confidence, model_version, attestation_input)` | LedgerLens service account or M-of-N signers | `service.require_auth()` or signer threshold | **`api`** — writes scores produced by `core` |
+| `submit_score(signers, wallet, asset_pair, score, benford_flag, ml_flag, timestamp, confidence, model_version, attestation_input)` | ScoreGate service account or M-of-N signers | `service.require_auth()` or signer threshold | **`api`** — writes scores produced by `core` |
 | `get_score(wallet, asset_pair)` | anyone | none (read-only) | **`api`**, **`dashboard`** (via api), and any third-party Soroban contract |
 | `get_score_count(wallet, asset_pair)` | anyone | none (read-only) | **`api`** — detects newly monitored vs. long-history wallets |
 | `set_service(new_service)` | admin | `admin.require_auth()` | ops/admin tooling for key rotation |
 | `get_admin()` / `get_service()` | anyone | none (read-only) | ops tooling, `api` health checks |
-| `query_risk_gate(wallet, pair, threshold)` | anyone | none (read-only, infallible) | any Soroban contract composing with LedgerLens |
+| `query_risk_gate(wallet, pair, threshold)` | anyone | none (read-only, infallible) | any Soroban contract composing with ScoreGate |
 | `query_risk_gate_with_confidence(wallet, pair, threshold, min_confidence)` | anyone | none (read-only, infallible) | contracts needing confidence-gated checks |
 | `supports_interface(capability)` | anyone | none (read-only) | feature detection for integrators |
 
@@ -789,7 +789,7 @@ pub struct RiskScore {
 
 ### Notes for Other Repos
 
-- **Working in `api`**: you depend on the contract interface and the `RiskScore` shape above. Check `contracts/ledgerlens-score/src/types.rs` and `lib.rs` in this repo for the current signatures before writing client code.
+- **Working in `api`**: you depend on the contract interface and the `RiskScore` shape above. Check `contracts/scoregate-score/src/types.rs` and `lib.rs` in this repo for the current signatures before writing client code.
 - **Working in `core`**: ensure your output scores conform to the 0-100 ranges above — the contract rejects out-of-range `score`/`confidence` values.
 - **Working in `dashboard`**: you consume `api`, not this contract directly; but the field names/ranges above flow through unchanged.
 - **Working in `data`**: no direct dependency on this contract, but feature definitions should stay consistent with what `core` ultimately reports here.
@@ -813,7 +813,7 @@ MIT
 
 ## Contributing
 
-Contributions are welcome. LedgerLens is an open-source public good built for the Stellar ecosystem. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, required checks, and PR guidelines, [`docs/invariants.md`](docs/invariants.md) for the non-negotiable behaviors (fail-closed gates, no-panic reads, bounded storage, append-only event/error stability) that any change to `lib.rs` must preserve, and [`docs/review-checklists.md`](docs/review-checklists.md) for the specific gates governance, cryptography, storage, upgrade, and composability changes are reviewed against.
+Contributions are welcome. ScoreGate is an open-source public good built for the Stellar ecosystem. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, required checks, and PR guidelines, [`docs/invariants.md`](docs/invariants.md) for the non-negotiable behaviors (fail-closed gates, no-panic reads, bounded storage, append-only event/error stability) that any change to `lib.rs` must preserve, and [`docs/review-checklists.md`](docs/review-checklists.md) for the specific gates governance, cryptography, storage, upgrade, and composability changes are reviewed against.
 
 ## References
 

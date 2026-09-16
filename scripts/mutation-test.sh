@@ -12,7 +12,7 @@
 # ──────────────────────────────────────────────────────────────────────────────
 set -euo pipefail
 
-CRATE_DIR="$(dirname "$0")/../contracts/ledgerlens-score"
+CRATE_DIR="$(dirname "$0")/../contracts/scoregate-score"
 FILTER_ARGS=("$@")
 
 echo "==> cargo-mutants: zk_range_proof.rs + verkle.rs"

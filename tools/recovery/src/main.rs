@@ -1,4 +1,4 @@
-//! # LedgerLens Post-Incident Recovery & Reconciliation Tool
+//! # ScoreGate Post-Incident Recovery & Reconciliation Tool
 //!
 //! Off-chain tooling for state snapshot, reconciliation, backup, and
 //! post-action verification workflows.
@@ -74,7 +74,7 @@ struct PostActionReport {
 // ── CLI ────────────────────────────────────────────────────────────────────
 
 #[derive(Parser)]
-#[command(name = "recovery", about = "LedgerLens post-incident recovery & reconciliation tool")]
+#[command(name = "recovery", about = "ScoreGate post-incident recovery & reconciliation tool")]
 struct Cli {
     #[command(subcommand)]
     command: Commands,

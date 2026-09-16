@@ -1,4 +1,4 @@
-//! Composability test for the ledgerlens-aggregator fallback pattern
+//! Composability test for the scoregate-aggregator fallback pattern
 //! (issue #434): distinguishing "the aggregator is unavailable" (no shards
 //! registered, or a shard's cross-contract call itself failed) from "the
 //! aggregator's shards genuinely agree this wallet is too risky" — both of
@@ -7,12 +7,12 @@
 //!
 //! See `examples/aggregator_gate_example.rs` (`AggregatorGatedAmm::swap`) for
 //! the full reference pattern this test exercises directly against a real
-//! deployed `LedgerLensAggregator` and `LedgerLensScoreContract` shard.
+//! deployed `ScoreGateAggregator` and `ScoreGateScoreContract` shard.
 
-use ledgerlens_aggregator::{
-    Error as AggregatorError, LedgerLensAggregator, LedgerLensAggregatorClient,
+use scoregate_aggregator::{
+    Error as AggregatorError, ScoreGateAggregator, ScoreGateAggregatorClient,
 };
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, Ledger as _},
@@ -37,7 +37,7 @@ enum GateOutcome {
 /// cannot meaningfully answer, matching the recommendation documented in
 /// `docs/aggregator-error-mapping.md`.
 fn gated_query(
-    aggregator: &LedgerLensAggregatorClient,
+    aggregator: &ScoreGateAggregatorClient,
     wallet: &Address,
     pair: &Symbol,
 ) -> GateOutcome {
@@ -65,13 +65,13 @@ fn gated_query(
 
 struct Fixture<'a> {
     env: Env,
-    aggregator: LedgerLensAggregatorClient<'a>,
-    shard: LedgerLensScoreContractClient<'a>,
+    aggregator: ScoreGateAggregatorClient<'a>,
+    shard: ScoreGateScoreContractClient<'a>,
     wallet: Address,
     pair: Symbol,
 }
 
-/// Deploys an aggregator and a real `LedgerLensScoreContract` shard, but does
+/// Deploys an aggregator and a real `ScoreGateScoreContract` shard, but does
 /// **not** register the shard with the aggregator — callers opt in via
 /// `f.aggregator.add_shard(&f.shard.address)` so each test controls exactly
 /// which "unavailable" scenario it exercises.
@@ -80,12 +80,12 @@ fn setup<'a>() -> Fixture<'a> {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let agg_id = env.register_contract(None, LedgerLensAggregator);
-    let aggregator = LedgerLensAggregatorClient::new(&env, &agg_id);
+    let agg_id = env.register_contract(None, ScoreGateAggregator);
+    let aggregator = ScoreGateAggregatorClient::new(&env, &agg_id);
     aggregator.initialize(&Address::generate(&env));
 
-    let shard_id = env.register_contract(None, LedgerLensScoreContract);
-    let shard = LedgerLensScoreContractClient::new(&env, &shard_id);
+    let shard_id = env.register_contract(None, ScoreGateScoreContract);
+    let shard = ScoreGateScoreContractClient::new(&env, &shard_id);
     shard.initialize(&Address::generate(&env), &Address::generate(&env));
 
     let wallet = Address::generate(&env);

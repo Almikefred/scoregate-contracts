@@ -149,9 +149,9 @@ log "Report directory: $REPORT_DIR"
 log ""
 
 log "Building contract WASM..."
-run cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score 2>/dev/null || warn "Build skipped (cargo not available in dry-run)"
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
-OPT_WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm"
+run cargo build --target wasm32-unknown-unknown --release -p scoregate-score 2>/dev/null || warn "Build skipped (cargo not available in dry-run)"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
+OPT_WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm"
 
 if [ "$DRY_RUN" = false ] && [ -f "$WASM_PATH" ]; then
   run soroban contract optimize --wasm "$WASM_PATH" 2>/dev/null || true

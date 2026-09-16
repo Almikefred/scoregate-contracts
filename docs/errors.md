@@ -1,8 +1,8 @@
-# LedgerLens Contract Error Reference
+# ScoreGate Contract Error Reference
 
-Human-readable reference for all error codes returned by the `ledgerlens-score` Soroban contract. Intended for API integrators, auditors, and dashboard builders who need to parse and handle contract errors without reading the Rust source.
+Human-readable reference for all error codes returned by the `scoregate-score` Soroban contract. Intended for API integrators, auditors, and dashboard builders who need to parse and handle contract errors without reading the Rust source.
 
-> **Source of truth:** [`contracts/ledgerlens-score/src/errors.rs`](../contracts/ledgerlens-score/src/errors.rs)
+> **Source of truth:** [`contracts/scoregate-score/src/errors.rs`](../contracts/scoregate-score/src/errors.rs)
 
 ## How errors surface
 
@@ -131,7 +131,7 @@ Soroban contract errors are returned as `u32` discriminant values. When a transa
 
 | Code | Name | Description | When returned | Client action |
 |-----:|------|-------------|---------------|---------------|
-| 40 | `HighRiskWallet` | Wallet failed the risk gate check | Returned by **integrating contracts** (e.g. AMMs, lending protocols) when `query_risk_gate` returns `false`. Not returned by the LedgerLens contract itself. | The wallet's risk score is too high for the operation. Inform the user and/or apply alternative handling. |
+| 40 | `HighRiskWallet` | Wallet failed the risk gate check | Returned by **integrating contracts** (e.g. AMMs, lending protocols) when `query_risk_gate` returns `false`. Not returned by the ScoreGate contract itself. | The wallet's risk score is too high for the operation. Inform the user and/or apply alternative handling. |
 
 ### Time-weighted decay
 

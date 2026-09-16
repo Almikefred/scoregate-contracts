@@ -1,4 +1,4 @@
-//! Reference integration: gating a swap on `ledgerlens-aggregator` when the
+//! Reference integration: gating a swap on `scoregate-aggregator` when the
 //! aggregator sits in front of **several** shards, with explicit, documented
 //! handling of the *degraded* case where one shard is paused mid-aggregation
 //! (e.g. maintenance).
@@ -11,9 +11,9 @@
 //!
 //! ## What the aggregator actually returns when a shard is paused
 //!
-//! `LedgerLensAggregator::query_risk_gate` ANDs the result across every
+//! `ScoreGateAggregator::query_risk_gate` ANDs the result across every
 //! registered, healthy shard. When one shard is globally paused, that shard
-//! does **not** trap the cross-contract call — `ledgerlens-score`'s
+//! does **not** trap the cross-contract call — `scoregate-score`'s
 //! `query_risk_gate_with_confidence` hits its own fail-closed branch and
 //! returns a clean `Ok(false)`. From the aggregator's perspective that is
 //! indistinguishable from a shard that genuinely judges the wallet
@@ -60,13 +60,13 @@
 //! Build it as part of the workspace:
 //!
 //! ```text
-//! cargo build --example aggregator_shard_pause_example -p ledgerlens-aggregator
+//! cargo build --example aggregator_shard_pause_example -p scoregate-aggregator
 //! ```
 
 #![no_std]
 
-use ledgerlens_aggregator::LedgerLensAggregatorClient;
-use ledgerlens_score::LedgerLensScoreContractClient;
+use scoregate_aggregator::ScoreGateAggregatorClient;
+use scoregate_score::ScoreGateScoreContractClient;
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, Symbol, Vec};
 
 /// Errors surfaced by the gated AMM. `PartialShardPause` is the degraded-mode
@@ -124,7 +124,7 @@ impl PauseAwareGatedAmm {
         aggregator_id: Address,
         gate_threshold: u32,
     ) -> GateOutcome {
-        let aggregator = LedgerLensAggregatorClient::new(&env, &aggregator_id);
+        let aggregator = ScoreGateAggregatorClient::new(&env, &aggregator_id);
 
         // 1. Nothing registered to consult at all: unavailable, not a verdict.
         let shards = aggregator.get_shards();
@@ -140,7 +140,7 @@ impl PauseAwareGatedAmm {
         let mut paused: Vec<Address> = Vec::new(&env);
         for i in 0..shards.len() {
             let shard = shards.get(i).unwrap();
-            let shard_client = LedgerLensScoreContractClient::new(&env, &shard);
+            let shard_client = ScoreGateScoreContractClient::new(&env, &shard);
             if shard_client.is_paused() {
                 paused.push_back(shard);
             }
@@ -171,7 +171,7 @@ impl PauseAwareGatedAmm {
         }
     }
 
-    /// Execute a swap gated on `ledgerlens-aggregator`. "Gracefully handle"
+    /// Execute a swap gated on `scoregate-aggregator`. "Gracefully handle"
     /// here means: proceed only on a trustworthy `Passed`; fail closed on
     /// every other outcome, and let the caller distinguish *why* it refused
     /// so it can alert an operator when the failure is operational rather
@@ -201,8 +201,8 @@ impl PauseAwareGatedAmm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ledgerlens_aggregator::{LedgerLensAggregator, LedgerLensAggregatorClient};
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_aggregator::{ScoreGateAggregator, ScoreGateAggregatorClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         symbol_short,
         testutils::{Address as _, Ledger as _},
@@ -214,14 +214,14 @@ mod tests {
     struct Fixture<'a> {
         env: Env,
         aggregator_id: Address,
-        shard_a: LedgerLensScoreContractClient<'a>,
-        shard_b: LedgerLensScoreContractClient<'a>,
+        shard_a: ScoreGateScoreContractClient<'a>,
+        shard_b: ScoreGateScoreContractClient<'a>,
         amm: PauseAwareGatedAmmClient<'a>,
         user: Address,
         pair: Symbol,
     }
 
-    /// Registers an aggregator, two real `LedgerLensScoreContract` shards, and
+    /// Registers an aggregator, two real `ScoreGateScoreContract` shards, and
     /// the example AMM, but does **not** add the shards to the aggregator —
     /// each test opts in via `add_both_shards` so the no-shards scenario is
     /// easy to set up.
@@ -230,16 +230,16 @@ mod tests {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-        let aggregator_id = env.register_contract(None, LedgerLensAggregator);
-        let aggregator = LedgerLensAggregatorClient::new(&env, &aggregator_id);
+        let aggregator_id = env.register_contract(None, ScoreGateAggregator);
+        let aggregator = ScoreGateAggregatorClient::new(&env, &aggregator_id);
         aggregator.initialize(&Address::generate(&env));
 
-        let shard_a_id = env.register_contract(None, LedgerLensScoreContract);
-        let shard_a = LedgerLensScoreContractClient::new(&env, &shard_a_id);
+        let shard_a_id = env.register_contract(None, ScoreGateScoreContract);
+        let shard_a = ScoreGateScoreContractClient::new(&env, &shard_a_id);
         shard_a.initialize(&Address::generate(&env), &Address::generate(&env));
 
-        let shard_b_id = env.register_contract(None, LedgerLensScoreContract);
-        let shard_b = LedgerLensScoreContractClient::new(&env, &shard_b_id);
+        let shard_b_id = env.register_contract(None, ScoreGateScoreContract);
+        let shard_b = ScoreGateScoreContractClient::new(&env, &shard_b_id);
         shard_b.initialize(&Address::generate(&env), &Address::generate(&env));
 
         let amm_id = env.register_contract(None, PauseAwareGatedAmm);
@@ -252,12 +252,12 @@ mod tests {
     }
 
     fn add_both_shards(f: &Fixture) {
-        let aggregator = LedgerLensAggregatorClient::new(&f.env, &f.aggregator_id);
+        let aggregator = ScoreGateAggregatorClient::new(&f.env, &f.aggregator_id);
         aggregator.add_shard(&f.shard_a.address);
         aggregator.add_shard(&f.shard_b.address);
     }
 
-    fn submit_score(f: &Fixture, shard: &LedgerLensScoreContractClient, score: u32) {
+    fn submit_score(f: &Fixture, shard: &ScoreGateScoreContractClient, score: u32) {
         shard.submit_score(
             &Vec::new(&f.env),
             &f.user,
@@ -341,7 +341,7 @@ mod tests {
 
         // Baseline sanity: the aggregated gate does fail closed, exactly as
         // documented in tests/composability/tests/aggregator_shard_pause.rs...
-        let aggregator = LedgerLensAggregatorClient::new(&f.env, &f.aggregator_id);
+        let aggregator = ScoreGateAggregatorClient::new(&f.env, &f.aggregator_id);
         assert!(!aggregator.query_risk_gate(&f.user, &f.pair, &GATE_THRESHOLD));
         // ...and that `false` is NOT attributable to any shard failure marker
         // (a pause is not a trap), which is why the degraded-aware consumer

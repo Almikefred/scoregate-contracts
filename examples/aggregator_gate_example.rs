@@ -1,13 +1,13 @@
-//! Reference integration: gating a swap on `ledgerlens-aggregator`, with an
+//! Reference integration: gating a swap on `scoregate-aggregator`, with an
 //! explicit, documented fallback policy for when the aggregator can't
 //! meaningfully answer at all — as opposed to answering "reject".
 //!
 //! ## The problem this solves
 //!
-//! `LedgerLensAggregator::query_risk_gate` is infallible: every failure case
+//! `ScoreGateAggregator::query_risk_gate` is infallible: every failure case
 //! (no shards registered, a shard's cross-contract call trapping, a shard
 //! being globally paused) collapses to the same `false` a genuinely
-//! high-risk wallet would produce (see `contracts/ledgerlens-aggregator/src/lib.rs`
+//! high-risk wallet would produce (see `contracts/scoregate-aggregator/src/lib.rs`
 //! and `tests/composability/tests/aggregator_shard_pause.rs`, issue #411). An
 //! integrator that only inspects that one boolean cannot tell "this wallet
 //! is risky" apart from "the risk oracle is currently unavailable" — two
@@ -37,12 +37,12 @@
 //! Build it as part of the workspace:
 //!
 //! ```text
-//! cargo build --example aggregator_gate_example -p ledgerlens-aggregator
+//! cargo build --example aggregator_gate_example -p scoregate-aggregator
 //! ```
 
 #![no_std]
 
-use ledgerlens_aggregator::LedgerLensAggregatorClient;
+use scoregate_aggregator::ScoreGateAggregatorClient;
 use soroban_sdk::{contract, contracterror, contractimpl, Address, Env, Symbol};
 
 /// Errors surfaced by the gated AMM. `AggregatorUnavailable` is the
@@ -66,7 +66,7 @@ pub struct AggregatorGatedAmm;
 
 #[contractimpl]
 impl AggregatorGatedAmm {
-    /// Execute a swap gated on `ledgerlens-aggregator`, distinguishing a
+    /// Execute a swap gated on `scoregate-aggregator`, distinguishing a
     /// genuine risk-based rejection from the aggregator being unavailable.
     pub fn swap(
         env: Env,
@@ -76,7 +76,7 @@ impl AggregatorGatedAmm {
         aggregator_id: Address,
         gate_threshold: u32,
     ) -> Result<u64, AmmError> {
-        let aggregator = LedgerLensAggregatorClient::new(&env, &aggregator_id);
+        let aggregator = ScoreGateAggregatorClient::new(&env, &aggregator_id);
 
         // 1. Nothing registered to consult at all: unavailable, not a verdict.
         if aggregator.get_shards().is_empty() {
@@ -116,8 +116,8 @@ impl AggregatorGatedAmm {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ledgerlens_aggregator::{LedgerLensAggregator, LedgerLensAggregatorClient};
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_aggregator::{ScoreGateAggregator, ScoreGateAggregatorClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         symbol_short,
         testutils::{Address as _, Ledger as _},
@@ -137,8 +137,8 @@ mod tests {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-        let aggregator_id = env.register_contract(None, LedgerLensAggregator);
-        let aggregator = LedgerLensAggregatorClient::new(&env, &aggregator_id);
+        let aggregator_id = env.register_contract(None, ScoreGateAggregator);
+        let aggregator = ScoreGateAggregatorClient::new(&env, &aggregator_id);
         aggregator.initialize(&Address::generate(&env));
 
         let amm_id = env.register_contract(None, AggregatorGatedAmm);
@@ -147,10 +147,10 @@ mod tests {
         Fixture { env, aggregator_id, amm }
     }
 
-    fn add_shard<'a>(fixture: &'a Fixture<'_>) -> LedgerLensScoreContractClient<'a> {
-        let aggregator = LedgerLensAggregatorClient::new(&fixture.env, &fixture.aggregator_id);
-        let shard_id = fixture.env.register_contract(None, LedgerLensScoreContract);
-        let shard = LedgerLensScoreContractClient::new(&fixture.env, &shard_id);
+    fn add_shard<'a>(fixture: &'a Fixture<'_>) -> ScoreGateScoreContractClient<'a> {
+        let aggregator = ScoreGateAggregatorClient::new(&fixture.env, &fixture.aggregator_id);
+        let shard_id = fixture.env.register_contract(None, ScoreGateScoreContract);
+        let shard = ScoreGateScoreContractClient::new(&fixture.env, &shard_id);
         shard.initialize(&Address::generate(&fixture.env), &Address::generate(&fixture.env));
         aggregator.add_shard(&shard_id);
         shard

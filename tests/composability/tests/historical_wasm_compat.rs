@@ -10,7 +10,7 @@
 //! No production entry point, storage key, event, or error discriminant is
 //! changed by this suite.
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient, RiskScore};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient, RiskScore};
 use mock_amm::{FailPolicy as AmmFailPolicy, MockAmm, MockAmmClient, MockAmmError};
 use mock_lending::{MockLending, MockLendingClient, MockLendingError};
 use sha2::{Digest, Sha256};
@@ -33,7 +33,7 @@ const HISTORICAL_MANIFEST: &str =
 const HISTORICAL_ABI_GOLDEN: &str =
     include_str!("../../fixtures/historical/ledgerlens-score-v3-8336828.abi");
 const CURRENT_ABI_GOLDEN: &str =
-    include_str!("../../fixtures/historical/ledgerlens-score-current.abi");
+    include_str!("../../fixtures/historical/scoregate-score-current.abi");
 
 const MAX_FIXTURE_BYTES: usize = 512 * 1024;
 const MAX_SPEC_BYTES: usize = 256 * 1024;
@@ -186,11 +186,11 @@ fn current_abi_golden() -> String {
     }
 
     let entries = [
-        entry(LedgerLensScoreContract::spec_xdr_get_version()),
-        entry(LedgerLensScoreContract::spec_xdr_initialize()),
-        entry(LedgerLensScoreContract::spec_xdr_query_risk_gate()),
-        entry(LedgerLensScoreContract::spec_xdr_query_risk_gate_with_confidence()),
-        entry(LedgerLensScoreContract::spec_xdr_supports_interface()),
+        entry(ScoreGateScoreContract::spec_xdr_get_version()),
+        entry(ScoreGateScoreContract::spec_xdr_initialize()),
+        entry(ScoreGateScoreContract::spec_xdr_query_risk_gate()),
+        entry(ScoreGateScoreContract::spec_xdr_query_risk_gate_with_confidence()),
+        entry(ScoreGateScoreContract::spec_xdr_supports_interface()),
         entry(RiskScore::spec_xdr()),
     ];
     stable_abi_golden(&entries)
@@ -198,7 +198,7 @@ fn current_abi_golden() -> String {
 
 struct HistoricalFixture<'a> {
     env: Env,
-    score: LedgerLensScoreContractClient<'a>,
+    score: ScoreGateScoreContractClient<'a>,
     amm: MockAmmClient<'a>,
     lending: MockLendingClient<'a>,
 }
@@ -220,7 +220,7 @@ fn setup_historical<'a>() -> HistoricalFixture<'a> {
     });
 
     let score_id = env.register_contract_wasm(None, HISTORICAL_WASM);
-    let score = LedgerLensScoreContractClient::new(&env, &score_id);
+    let score = ScoreGateScoreContractClient::new(&env, &score_id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
     score.initialize(&admin, &service);
@@ -395,8 +395,8 @@ fn historical_client_calls_the_current_stable_gate_surface() {
         ledger.sequence_number = 100;
         ledger.timestamp = 1_700_000_000;
     });
-    let current_id = env.register_contract(None, LedgerLensScoreContract);
-    let current = LedgerLensScoreContractClient::new(&env, &current_id);
+    let current_id = env.register_contract(None, ScoreGateScoreContract);
+    let current = ScoreGateScoreContractClient::new(&env, &current_id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
     current.initialize(&admin, &service);

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # --- usage ---
-# Build, optimize, deploy and initialize the LedgerLens score contract.
+# Build, optimize, deploy and initialize the ScoreGate score contract.
 #
 # Usage:
 #   ./deploy.sh [options] <network> <admin-identity> <service-address>
@@ -107,8 +107,8 @@ REQUIRE_MAINNET_CONFIRMATION=""
 CLI_BIN=""
 CLI_LABEL=""
 CARGO_BIN="cargo"
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
-OPTIMIZED_WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
+OPTIMIZED_WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm"
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -293,7 +293,7 @@ fi
 # ── Build ─────────────────────────────────────────────────────────────────────
 
 log "Building contract (wasm32-unknown-unknown, release)"
-run "$CARGO_BIN" build --target wasm32-unknown-unknown --release -p ledgerlens-score
+run "$CARGO_BIN" build --target wasm32-unknown-unknown --release -p scoregate-score
 
 log "Optimizing wasm"
 run "$CLI_BIN" contract optimize --wasm "$WASM_PATH"

@@ -14,7 +14,7 @@ use soroban_sdk::testutils::Address as _;
 use soroban_sdk::testutils::Ledger as _;
 use soroban_sdk::{Address, Env, Symbol, Vec as SVec};
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient, ScoreSubmission};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient, ScoreSubmission};
 use schema::ReplayFileHeader;
 
 #[derive(Debug, Deserialize)]
@@ -175,7 +175,7 @@ fn parse_issue_references(args: &[String]) -> Vec<String> {
 fn process_snapshot(
     path: &str,
     env: &Env,
-    client: &LedgerLensScoreContractClient,
+    client: &ScoreGateScoreContractClient,
     config_snapshot: &ConfigSnapshot,
     issue_references: &[String],
 ) -> Result<(usize, IncidentEvidenceBundle)> {
@@ -293,7 +293,7 @@ fn process_failure_scenario(
     scenario: &str,
     path: &str,
     env: &Env,
-    client: &LedgerLensScoreContractClient,
+    client: &ScoreGateScoreContractClient,
     _admin: &Address,
 ) -> Result<usize> {
     let f = File::open(path).context("opening failure scenario file")?;
@@ -341,7 +341,7 @@ fn process_failure_scenario(
     Ok(count)
 }
 
-fn run_failure_injection(env: &Env, client: &LedgerLensScoreContractClient, admin: &Address) {
+fn run_failure_injection(env: &Env, client: &ScoreGateScoreContractClient, admin: &Address) {
     println!("Running failure-injection scenarios...");
 
     let scenarios = vec![
@@ -378,8 +378,8 @@ fn main() -> Result<()> {
 
             let env = Env::default();
             env.mock_all_auths();
-            let contract_id = env.register_contract(None, LedgerLensScoreContract);
-            let client = LedgerLensScoreContractClient::new(&env, &contract_id);
+            let contract_id = env.register_contract(None, ScoreGateScoreContract);
+            let client = ScoreGateScoreContractClient::new(&env, &contract_id);
             let admin = Address::generate(&env);
             let service = Address::generate(&env);
             client.initialize(&admin, &service);
@@ -406,8 +406,8 @@ fn main() -> Result<()> {
 
             let env = Env::default();
             env.mock_all_auths();
-            let contract_id = env.register_contract(None, LedgerLensScoreContract);
-            let client = LedgerLensScoreContractClient::new(&env, &contract_id);
+            let contract_id = env.register_contract(None, ScoreGateScoreContract);
+            let client = ScoreGateScoreContractClient::new(&env, &contract_id);
             let admin = Address::generate(&env);
             let service = Address::generate(&env);
             client.initialize(&admin, &service);

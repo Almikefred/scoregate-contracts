@@ -1,6 +1,6 @@
 # Replay Harness
 
-A deterministic replay tool for regression testing the LedgerLens contract with real Stellar mainnet trade history.
+A deterministic replay tool for regression testing the ScoreGate contract with real Stellar mainnet trade history.
 
 ## Overview
 

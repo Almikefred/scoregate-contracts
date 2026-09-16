@@ -1,11 +1,11 @@
 # Operational SLOs — Score Freshness & Risk-Gate Availability
 
 Concrete, measurable operational targets for the off-chain service and on-chain
-`ledgerlens-score` contract. These SLOs turn the product expectation "scores
+`scoregate-score` contract. These SLOs turn the product expectation "scores
 should be trustworthy and the gate should be up" into numbers an operator can
 alert on.
 
-> **Source of truth for defaults:** [`contracts/ledgerlens-score/src/constants.rs`](../contracts/ledgerlens-score/src/constants.rs)
+> **Source of truth for defaults:** [`contracts/scoregate-score/src/constants.rs`](../contracts/scoregate-score/src/constants.rs)
 
 ## Out of scope (explicit)
 

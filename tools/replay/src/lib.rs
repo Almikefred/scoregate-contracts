@@ -1,5 +1,5 @@
 use anyhow::{anyhow, bail, Result};
-use ledgerlens_score::CONFIG_DRIFT_MANIFEST_FIELDS;
+use scoregate_score::CONFIG_DRIFT_MANIFEST_FIELDS;
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
 use std::collections::BTreeSet;

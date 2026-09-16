@@ -1,6 +1,6 @@
 # Zero-Knowledge Range Proofs for Score Queries
 
-LedgerLens implements a zero-knowledge (ZK) range proof scheme allowing third-party contracts to verify that a wallet's risk score is below a chosen threshold $T$ (i.e. $score < T$) without the LedgerLens score contract revealing the exact score value to the calling contract.
+ScoreGate implements a zero-knowledge (ZK) range proof scheme allowing third-party contracts to verify that a wallet's risk score is below a chosen threshold $T$ (i.e. $score < T$) without the ScoreGate score contract revealing the exact score value to the calling contract.
 
 This is achieved using **Pedersen Commitments** and **Bulletproofs** verified on-chain via a SHA-256-based Fiat-Shamir heuristic.
 
@@ -10,7 +10,7 @@ This is achieved using **Pedersen Commitments** and **Bulletproofs** verified on
 
 ### Pedersen Commitment
 
-When the LedgerLens service submits a score $v \in [0, 100]$ to the contract, it can optionally submit a Pedersen commitment:
+When the ScoreGate service submits a score $v \in [0, 100]$ to the contract, it can optionally submit a Pedersen commitment:
 $$C = g^v \cdot h^r \pmod p$$
 where:
 *   $g$ and $h$ are independent generators on the Twisted Edwards Curve (Ed25519).

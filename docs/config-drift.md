@@ -1,7 +1,7 @@
 # Configuration drift detection
 
-LedgerLens now defines a stable operator-facing configuration manifest for
-deployed `ledgerlens-score` instances and ships a deterministic drift checker
+ScoreGate now defines a stable operator-facing configuration manifest for
+deployed `scoregate-score` instances and ships a deterministic drift checker
 through the `replay` tool.
 
 ## Stable manifest fields

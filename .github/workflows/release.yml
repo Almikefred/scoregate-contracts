@@ -53,15 +53,15 @@ jobs:
       # Exact command from ci.yml build job and supply-chain job. --locked enforces
       # the committed Cargo.lock. No cargo cache — this is a cold build.
       - name: Build release WASM
-        run: cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+        run: cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 
       # ── Optimize WASM ─────────────────────────────────────────────────────────
       # Uses stellar contract optimize (soroban contract optimize in older versions).
       # This step is deterministic given the same input WASM and same CLI version.
       - name: Optimize WASM
         run: |
-          RAW_WASM=target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
-          OPT_WASM=target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm
+          RAW_WASM=target/wasm32-unknown-unknown/release/scoregate_score.wasm
+          OPT_WASM=target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm
           stellar contract optimize --wasm "$RAW_WASM" --output "$OPT_WASM"
           echo "Optimized WASM written to $OPT_WASM"
           echo "Raw size:    $(wc -c < "$RAW_WASM" | tr -d ' ') bytes"
@@ -72,8 +72,8 @@ jobs:
       # This is the artifact that gets deployed and published.
       - name: Sign optimized WASM (SHA-256 manifest)
         run: |
-          OPT_WASM=target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm
-          MANIFEST=target/ledgerlens_score.optimized.wasm.sha256
+          OPT_WASM=target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm
+          MANIFEST=target/scoregate_score.optimized.wasm.sha256
           sha256sum "$OPT_WASM" > "$MANIFEST"
           echo "Manifest written:"
           cat "$MANIFEST"
@@ -83,7 +83,7 @@ jobs:
       # workflow stops before publish-release can run.
       - name: Verify optimized WASM against manifest
         run: |
-          MANIFEST=target/ledgerlens_score.optimized.wasm.sha256
+          MANIFEST=target/scoregate_score.optimized.wasm.sha256
           sha256sum --check "$MANIFEST"
           echo "OK: Optimized WASM artifact integrity verified."
 
@@ -91,15 +91,15 @@ jobs:
       - name: Upload optimized WASM
         uses: actions/upload-artifact@v4
         with:
-          name: ledgerlens-score-optimized-wasm
-          path: target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm
+          name: scoregate-score-optimized-wasm
+          path: target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm
           retention-days: 90
 
       - name: Upload optimized WASM SHA-256 manifest
         uses: actions/upload-artifact@v4
         with:
-          name: ledgerlens-score-optimized-wasm-sha256
-          path: target/ledgerlens_score.optimized.wasm.sha256
+          name: scoregate-score-optimized-wasm-sha256
+          path: target/scoregate_score.optimized.wasm.sha256
           retention-days: 90
 
   # ═══════════════════════════════════════════════════════════════════════════
@@ -131,18 +131,18 @@ jobs:
           toolchain: "1.81.0"
           targets: wasm32-unknown-unknown
       - name: Build WASM (run 1)
-        run: cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+        run: cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
       - name: Compute SHA-256 (run 1)
         id: hash1
         run: |
-          SHA=$(sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm | awk '{print $1}')
+          SHA=$(sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm | awk '{print $1}')
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
           echo "Run 1 SHA-256: $SHA"
       - name: Upload WASM artifact (run 1)
         uses: actions/upload-artifact@v4
         with:
           name: wasm-run-1
-          path: target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+          path: target/wasm32-unknown-unknown/release/scoregate_score.wasm
           retention-days: 1
 
       # ── Reproducible build run 2 ──────────────────────────────────────────────
@@ -154,18 +154,18 @@ jobs:
           toolchain: "1.81.0"
           targets: wasm32-unknown-unknown
       - name: Build WASM (run 2)
-        run: cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+        run: cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
       - name: Compute SHA-256 (run 2)
         id: hash2
         run: |
-          SHA=$(sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm | awk '{print $1}')
+          SHA=$(sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm | awk '{print $1}')
           echo "sha256=$SHA" >> "$GITHUB_OUTPUT"
           echo "Run 2 SHA-256: $SHA"
       - name: Upload WASM artifact (run 2)
         uses: actions/upload-artifact@v4
         with:
           name: wasm-run-2
-          path: target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+          path: target/wasm32-unknown-unknown/release/scoregate_score.wasm
           retention-days: 1
 
       # ── Verify: compare SHA-256 digests ───────────────────────────────────────
@@ -215,13 +215,13 @@ jobs:
       - name: Download optimized WASM
         uses: actions/download-artifact@v4
         with:
-          name: ledgerlens-score-optimized-wasm
+          name: scoregate-score-optimized-wasm
           path: release-artifacts
 
       - name: Download optimized WASM SHA-256 manifest
         uses: actions/download-artifact@v4
         with:
-          name: ledgerlens-score-optimized-wasm-sha256
+          name: scoregate-score-optimized-wasm-sha256
           path: release-artifacts
 
       # ── Extract release notes from CHANGELOG.md ───────────────────────────────
@@ -276,8 +276,8 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           TAG="${GITHUB_REF_NAME}"
-          OPT_WASM="release-artifacts/ledgerlens_score.optimized.wasm"
-          MANIFEST="release-artifacts/ledgerlens_score.optimized.wasm.sha256"
+          OPT_WASM="release-artifacts/scoregate_score.optimized.wasm"
+          MANIFEST="release-artifacts/scoregate_score.optimized.wasm.sha256"
 
           # Read optimized SHA-256 from manifest
           OPT_SHA256=$(cat "$MANIFEST" | awk '{print $1}')
@@ -297,8 +297,8 @@ jobs:
 
           | Artifact | SHA-256 |
           |---|---|
-          | \`ledgerlens_score.optimized.wasm\` (optimized, deployable) | \`$OPT_SHA256\` |
-          | \`ledgerlens_score.wasm\` (raw, reproducible build) | \`${{ needs.reproducibility-check.outputs.verified-sha256 }}\` |
+          | \`scoregate_score.optimized.wasm\` (optimized, deployable) | \`$OPT_SHA256\` |
+          | \`scoregate_score.wasm\` (raw, reproducible build) | \`${{ needs.reproducibility-check.outputs.verified-sha256 }}\` |
 
           > **Verification**: The raw WASM SHA-256 above was verified by the release workflow's
           > double-build reproducibility check (two independent cold builds produced identical
@@ -311,10 +311,10 @@ jobs:
 
           \`\`\`bash
           # Download the optimized WASM from this release
-          curl -LO https://github.com/Ledger-Lenz/Ledgerlens-contract/releases/download/$TAG/ledgerlens_score.optimized.wasm
+          curl -LO https://github.com/Ledger-Lenz/scoregate-contract/releases/download/$TAG/scoregate_score.optimized.wasm
 
           # Verify SHA-256
-          echo "$OPT_SHA256  ledgerlens_score.optimized.wasm" | sha256sum --check
+          echo "$OPT_SHA256  scoregate_score.optimized.wasm" | sha256sum --check
           \`\`\`
 
           To verify the raw artifact matches the on-chain deployed contract (after deployment):
@@ -322,8 +322,8 @@ jobs:
           \`\`\`bash
           # Build from source at this tag
           git checkout $TAG
-          cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
-          sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+          cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
+          sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm
           # Compare with raw SHA-256 above
           \`\`\`
 
@@ -354,7 +354,7 @@ jobs:
       # - name: Generate SBOM (CycloneDX)
       #   run: |
       #     cargo install cargo-cyclonedx --locked
-      #     cargo cyclonedx --target wasm32-unknown-unknown --release -p ledgerlens-score \
+      #     cargo cyclonedx --target wasm32-unknown-unknown --release -p scoregate-score \
       #       --output-format json --output-file target/sbom.json
       #
       # - name: Upload SBOM to release

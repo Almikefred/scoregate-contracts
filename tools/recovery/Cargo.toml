@@ -2,8 +2,8 @@
 name = "recovery"
 version = "0.1.0"
 edition = "2021"
-description = "Post-incident recovery, snapshot, and reconciliation tooling for LedgerLens"
-repository = "https://github.com/ledgerlens/contract"
+description = "Post-incident recovery, snapshot, and reconciliation tooling for ScoreGate"
+repository = "https://github.com/scoregate/contract"
 license = "MIT"
 
 [dependencies]

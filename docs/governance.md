@@ -1,6 +1,6 @@
 # On-Chain Governance
 
-LedgerLens uses a lightweight on-chain governance module for admin parameter
+ScoreGate uses a lightweight on-chain governance module for admin parameter
 changes and contract WASM upgrades. Both flows follow the same high-level
 pattern:
 
@@ -14,7 +14,7 @@ registry**.  For WASM upgrade governance, see the
 ## Governance Action Registry
 
 Every privileged admin action is assigned a **stable `u8` discriminant** in
-`contracts/ledgerlens-score/src/governance_actions.rs`.  This registry is the
+`contracts/scoregate-score/src/governance_actions.rs`.  This registry is the
 single source of truth for action identifiers — no other file may introduce a
 new raw byte literal for a governance action.
 
@@ -304,7 +304,7 @@ Minimal blast radius; other pairs continue operating normally.
       └─ Effect: Submissions resume
 
 **When to use**: Maintenance, data migration, or temporary service disruption. Readers (consuming protocols)
-stay unaffected; dApps querying LedgerLens can continue operating during the freeze.
+stay unaffected; dApps querying ScoreGate can continue operating during the freeze.
 
 ### Decision Matrix
 

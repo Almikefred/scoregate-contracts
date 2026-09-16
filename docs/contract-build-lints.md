@@ -12,8 +12,8 @@ tests while still being unreachable or dead in the deployable WASM build.
 
 `tools/check_contract_build_lints.sh` runs warning-denied WASM-target checks:
 
-- `RUSTFLAGS=-Dwarnings cargo check -p ledgerlens-score --lib --target wasm32-unknown-unknown --release`
-- `RUSTFLAGS=-Dwarnings cargo check -p ledgerlens-aggregator --lib --target wasm32-unknown-unknown --release`
+- `RUSTFLAGS=-Dwarnings cargo check -p scoregate-score --lib --target wasm32-unknown-unknown --release`
+- `RUSTFLAGS=-Dwarnings cargo check -p scoregate-aggregator --lib --target wasm32-unknown-unknown --release`
 
 This keeps the check scoped to contract crates and turns Rust warnings,
 including `dead_code`, into hard failures for deployable builds.
@@ -29,7 +29,7 @@ The following code is intentionally native-only and is therefore excluded from
 the contract-only lint check instead of being treated as a deployable dead-code
 failure:
 
-- `#[cfg(test)]` modules under `contracts/ledgerlens-score/src/`
+- `#[cfg(test)]` modules under `contracts/scoregate-score/src/`
 - the native-only `event_causality` audit/replay helper, which uses host heap
   collections and is not invoked by contract entry points
 - compatibility catalogs in `constants`, `events`, `governance_actions`,
@@ -38,7 +38,7 @@ failure:
   when a particular build has no live caller
 - private numerical/accumulator helpers retained for compatibility tests and
   planned feature paths; each is annotated individually in `lib.rs`
-- `contracts/ledgerlens-aggregator/src/test.rs`
+- `contracts/scoregate-aggregator/src/test.rs`
 - doctest and shell-test harness code used only to verify host tooling
 
 Those paths are still expected to stay purposeful. They are not part of the

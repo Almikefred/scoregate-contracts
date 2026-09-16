@@ -4,7 +4,7 @@ _Date: 2026-08-25_
 
 ## Decision
 
-`ledgerlens-aggregator` should keep its current conservative fan-out policies for
+`scoregate-aggregator` should keep its current conservative fan-out policies for
 user-facing reads, and it should not replace the existing `primary shard wins`
 default for configuration-style getters in this PR.
 

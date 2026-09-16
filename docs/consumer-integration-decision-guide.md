@@ -2,9 +2,9 @@
 
 _Integration decision points for protocol risk owners (issue #720)._
 
-This document maps protocol risk appetite to concrete LedgerLens configuration
+This document maps protocol risk appetite to concrete ScoreGate configuration
 choices: threshold, confidence floor, fallback behavior, and pause policy.  It
-is addressed to operators and developers who are integrating LedgerLens into an
+is addressed to operators and developers who are integrating ScoreGate into an
 AMM or lending contract and need to choose settings that match their risk
 tolerance.
 
@@ -15,11 +15,11 @@ tolerance.
 | Parameter | What it controls | Configured on |
 |---|---|---|
 | `gate_threshold` (0–100) | Maximum risk score a wallet may have to pass the gate. Lower = stricter. | Consumer contract |
-| `min_confidence` (0–100) | Minimum confidence LedgerLens must have in the score. Lower = more permissive. | Consumer contract |
-| Failover contract address | Secondary LedgerLens deployment consulted when the primary is paused. | Primary LedgerLens (admin-only) |
-| `FAILOVER_STALENESS_WINDOW` | How old a failover score may be before it is treated as missing (3 600 s). | Hard-coded in LedgerLens |
-| Embargo | Wallet-level override: always `false` regardless of score. | Primary LedgerLens (admin-only) |
-| Pause circuit breaker | Global pause: all gates return `false` unless a healthy failover is configured. | Primary LedgerLens (admin-only) |
+| `min_confidence` (0–100) | Minimum confidence ScoreGate must have in the score. Lower = more permissive. | Consumer contract |
+| Failover contract address | Secondary ScoreGate deployment consulted when the primary is paused. | Primary ScoreGate (admin-only) |
+| `FAILOVER_STALENESS_WINDOW` | How old a failover score may be before it is treated as missing (3 600 s). | Hard-coded in ScoreGate |
+| Embargo | Wallet-level override: always `false` regardless of score. | Primary ScoreGate (admin-only) |
+| Pause circuit breaker | Global pause: all gates return `false` unless a healthy failover is configured. | Primary ScoreGate (admin-only) |
 
 ---
 
@@ -62,7 +62,7 @@ blocked because their confidence is below 50.  This is the intended behavior:
 treating an uncertain signal as "not safe" is more conservative than treating
 it as "probably safe."
 
-**Pause behavior:** If the LedgerLens primary is paused and no failover is
+**Pause behavior:** If the ScoreGate primary is paused and no failover is
 configured, the gate returns `false` for every wallet.  During scheduled
 maintenance windows, configure a failover secondary to avoid blocking all swaps.
 

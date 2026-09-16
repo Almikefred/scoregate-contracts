@@ -3,8 +3,8 @@
 set -euo pipefail
 
 PACKAGES=(
-  ledgerlens-score
-  ledgerlens-aggregator
+  scoregate-score
+  scoregate-aggregator
 )
 
 echo "Checking contract-only builds for dead code with wasm-target lints enabled"

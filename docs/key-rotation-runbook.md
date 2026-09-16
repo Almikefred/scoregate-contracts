@@ -1,4 +1,4 @@
-# Key-Rotation Operator Runbook — LedgerLens Score Contract
+# Key-Rotation Operator Runbook — ScoreGate Score Contract
 
 > **Version:** 1.0 (issue #633)  
 > **Audience:** On-call operators and contract admins  

@@ -6,7 +6,7 @@
 
 ## 1. Background and Motivation
 
-LedgerLens already runs [cargo-mutants](https://mutants.rs/) nightly
+ScoreGate already runs [cargo-mutants](https://mutants.rs/) nightly
 against `zk_range_proof.rs` and `verkle.rs` — the project's cryptography
 modules.  This spike answers the question posed in #935:
 
@@ -58,7 +58,7 @@ purposes.
 Runtime data below comes from a dry-run count of candidate mutants (via
 `cargo mutants --list --profile <shard>`) combined with the median per-mutant
 compile-plus-test time observed on the `ubuntu-latest` runner for the
-`ledgerlens-score` crate.
+`scoregate-score` crate.
 
 The Soroban test harness runs entirely in-process with no network calls, so
 per-mutant test time is dominated by Rust compilation.  Incremental

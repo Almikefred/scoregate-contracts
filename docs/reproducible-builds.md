@@ -1,6 +1,6 @@
 # Reproducible Builds
 
-LedgerLens commits to a **reproducible-build guarantee**: any third party who
+ScoreGate commits to a **reproducible-build guarantee**: any third party who
 checks out the same source commit and builds with the pinned toolchain must
 obtain a byte-identical WASM artifact.  This lets you independently verify
 that the contract deployed on-chain matches the published source — without
@@ -61,7 +61,7 @@ same binary from the same source commit.
 
 ## Dependency license policy & SBOM
 
-LedgerLens commits to more than reproducible builds: it enforces an explicit,
+ScoreGate commits to more than reproducible builds: it enforces an explicit,
 machine-readable dependency license policy and ships a software bill of
 materials (SBOM) for every release. Both run in CI and are traceable to the
 same commit as the signed WASM.
@@ -98,13 +98,13 @@ release WASM — generates a [CycloneDX](https://cyclonedx.org) SBOM with
   expression.
 * **Scope:** generated for the `wasm32-unknown-unknown` target, so the SBOM
   describes exactly the dependency graph embedded in the released
-  `ledgerlens_score.wasm`.
-* **Artifact:** uploaded to GitHub as the `ledgerlens-sbom-cdx` artifact
+  `scoregate_score.wasm`.
+* **Artifact:** uploaded to GitHub as the `scoregate-sbom-cdx` artifact
   (`target/sbom/*.cdx.json`), alongside the `wasm` and
-  `ledgerlens-score-wasm-sha256-manifest` artifacts, in the same workflow run.
+  `scoregate-score-wasm-sha256-manifest` artifacts, in the same workflow run.
   Because they are produced in the same job from the same checkout, the SBOM,
   the binary, and its SHA-256 signature are traceable to a single commit.
-* **Primary document:** `ledgerlens-score.cdx.json` (the shipped contract's
+* **Primary document:** `scoregate-score.cdx.json` (the shipped contract's
   embedded dependency graph).
 
 > **Reproducibility note:** SBOM generation lives in the `supply-chain` job,
@@ -124,7 +124,7 @@ tools/generate_sbom.sh
 # Output: target/sbom/*.cdx.json (validated CycloneDX 1.3 JSON)
 
 # Optional: validate any SBOM against the official CycloneDX 1.3 JSON schema
-python3 -m jsonschema -i target/sbom/ledgerlens-score.cdx.json \
+python3 -m jsonschema -i target/sbom/scoregate-score.cdx.json \
   <(curl -sL https://raw.githubusercontent.com/CycloneDX/specification/1.3/schema/bom-1.3.schema.json)
 ```
 
@@ -132,10 +132,10 @@ python3 -m jsonschema -i target/sbom/ledgerlens-score.cdx.json \
 
 Downstream integrators (AMM / lending protocols, and the `api` / `dashboard` /
 `core` repos for their own compliance tooling) consume the
-`ledgerlens-sbom-cdx` GitHub Actions artifact from each release. Use the `purl`
+`scoregate-sbom-cdx` GitHub Actions artifact from each release. Use the `purl`
 field of each component to map a crate to its canonical package, and the
 `licenses` expression to drive their own license-policy checks. Because the
-SBOM and the `ledgerlens-score.wasm.sha256` manifest are produced from the same
+SBOM and the `scoregate-score.wasm.sha256` manifest are produced from the same
 CI run, an integrator can bind a specific SBOM to the exact binary hash they
 deploy, closing their transitive-supply-chain review loop.
 
@@ -162,8 +162,8 @@ rustup target add wasm32-unknown-unknown --toolchain 1.81.0
 ### Step 1 — Check out the exact commit
 
 ```bash
-git clone https://github.com/Ledger-Lenz/Ledgerlens-contract.git
-cd Ledgerlens-contract
+git clone https://github.com/Ledger-Lenz/scoregate-contract.git
+cd scoregate-contract
 
 # Replace <COMMIT_SHA> with the Git commit that was deployed on-chain.
 # For a tagged release, use the tag instead: git checkout contract-v1.2.3
@@ -177,18 +177,18 @@ git checkout <COMMIT_SHA>
 cargo build \
   --target wasm32-unknown-unknown \
   --release \
-  -p ledgerlens-score \
+  -p scoregate-score \
   --locked
 ```yaml
 
 ### Step 3 — Compute the SHA-256 hash of the local artifact
 
 ```bash
-sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm
 
 Example output:
 ```
-a1b2c3d4e5f6...  target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+a1b2c3d4e5f6...  target/wasm32-unknown-unknown/release/scoregate_score.wasm
 
 ### Step 4 — Retrieve the on-chain WASM hash
 
@@ -224,7 +224,7 @@ curl -s https://soroban-testnet.stellar.org \
 > **Note**: the on-chain `wasm_hash` is the hash of the *raw* WASM bytes before
 > any Soroban optimization step.  If you apply `stellar contract optimize` (or
 > the legacy `soroban contract optimize`) after the build step, hash the
-> **unoptimized** artifact (`ledgerlens_score.wasm`) to match the on-chain
+> **unoptimized** artifact (`scoregate_score.wasm`) to match the on-chain
 > hash, unless the deploy was done with the optimized artifact — in which case
 > hash the optimized one.  The deployment logs or `deploy.sh` output will
 > indicate which artifact was deployed.

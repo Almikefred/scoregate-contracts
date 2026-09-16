@@ -4,7 +4,7 @@
 
 ## Threat model
 
-`submit_score` (`contracts/ledgerlens-score/src/lib.rs`) is gated by
+`submit_score` (`contracts/scoregate-score/src/lib.rs`) is gated by
 authorized signers/service — it is not open to arbitrary public callers.
 The realistic risk is therefore not an external attacker, but the
 **off-chain scoring service (or a compromised/careless authorized signer)

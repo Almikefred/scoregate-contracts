@@ -30,7 +30,7 @@ body:
         - Security & cryptography (attestation, ZK, Verkle)
         - Governance & admin (multisig, parameter governance, upgrades)
         - Composability & gate semantics (query_risk_gate*)
-        - Aggregator / cross-contract (ledgerlens-aggregator, mocks)
+        - Aggregator / cross-contract (scoregate-aggregator, mocks)
         - Fuzz / adversarial coverage
         - Other (specify in Summary)
     validations:
@@ -41,8 +41,8 @@ body:
     attributes:
       label: Relevant files
       placeholder: |
-        contracts/ledgerlens-score/src/test_<feature>.rs (new)
-        contracts/ledgerlens-score/src/lib.rs (function under test, read-only)
+        contracts/scoregate-score/src/test_<feature>.rs (new)
+        contracts/scoregate-score/src/lib.rs (function under test, read-only)
     validations:
       required: true
 
@@ -64,7 +64,7 @@ body:
       options:
         - label: Inspected the current implementation and confirmed the gap above against real code, not assumption.
           required: true
-        - label: New test(s) added, following the existing `test_<feature>.rs` file + `setup()` helper convention used throughout `contracts/ledgerlens-score/src/`.
+        - label: New test(s) added, following the existing `test_<feature>.rs` file + `setup()` helper convention used throughout `contracts/scoregate-score/src/`.
           required: true
         - label: Success path covered.
           required: true

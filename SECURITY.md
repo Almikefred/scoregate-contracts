@@ -2,7 +2,7 @@
 
 ## Scope
 
-This policy covers the **`ledgerlens-score` Soroban smart contract** and the surrounding deployment tooling in this repository.
+This policy covers the **`scoregate-score` Soroban smart contract** and the surrounding deployment tooling in this repository.
 
 Out-of-scope:
 - The off-chain detection pipeline (`core`, `data` repos)
@@ -20,7 +20,7 @@ Out-of-scope:
 
 **Please do not open a public GitHub issue for security vulnerabilities.**
 
-Report security issues by emailing **security@ledgerlens.io** with the subject line:
+Report security issues by emailing **security@scoregate.io** with the subject line:
 
 ```
 [SECURITY] <short description>

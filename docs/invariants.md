@@ -1,6 +1,6 @@
 # Repository Invariants
 
-This document lists the behaviors in `ledgerlens-score` that are **non-negotiable**: a PR that
+This document lists the behaviors in `scoregate-score` that are **non-negotiable**: a PR that
 weakens one of them needs an explicit design discussion, not just a normal review pass. It
 exists because this contract's primary value is being a dependency other protocols embed
 directly inside their own guard clauses (see [README.md § Composability](../README.md#composability))
@@ -26,7 +26,7 @@ score exists, the wallet is embargoed, it's inside a hysteresis risk band, the p
 is paused and no fresh failover data exists, or supplied parameters are out of range.
 
 **Where implemented:** `query_risk_gate_with_confidence` in
-[`lib.rs`](../contracts/ledgerlens-score/src/lib.rs) (`query_risk_gate` is a thin wrapper around
+[`lib.rs`](../contracts/scoregate-score/src/lib.rs) (`query_risk_gate` is a thin wrapper around
 it). Reading the function top to bottom, every early return on an uncertain path is `false`:
 
 | Condition | Returns |
@@ -41,15 +41,15 @@ it). Reading the function top to bottom, every early return on an uncertain path
 | Score's `confidence` is below the effective floor (`max(min_confidence, global_min_confidence)`) | `false` |
 
 **Tests:** this is one of the best-covered invariants in the repo —
-[`test_embargo.rs`](../contracts/ledgerlens-score/src/test_embargo.rs) (`test_query_risk_gate_false_when_embargoed`,
+[`test_embargo.rs`](../contracts/scoregate-score/src/test_embargo.rs) (`test_query_risk_gate_false_when_embargoed`,
 `test_query_risk_gate_false_when_embargoed_and_no_score`),
-[`test_hysteresis.rs`](../contracts/ledgerlens-score/src/test_hysteresis.rs) (`test_query_risk_gate_returns_false_when_in_band_despite_low_score`,
+[`test_hysteresis.rs`](../contracts/scoregate-score/src/test_hysteresis.rs) (`test_query_risk_gate_returns_false_when_in_band_despite_low_score`,
 `test_query_risk_gate_no_score_still_conservative`),
-[`test_failover.rs`](../contracts/ledgerlens-score/src/test_failover.rs) (`test_gate_returns_false_when_paused_with_no_secondary`,
+[`test_failover.rs`](../contracts/scoregate-score/src/test_failover.rs) (`test_gate_returns_false_when_paused_with_no_secondary`,
 `test_stale_secondary_score_fails_closed`),
-[`test_confidence_gate.rs`](../contracts/ledgerlens-score/src/test_confidence_gate.rs) (`test_confidence_gate_no_score_returns_false`,
+[`test_confidence_gate.rs`](../contracts/scoregate-score/src/test_confidence_gate.rs) (`test_confidence_gate_no_score_returns_false`,
 `test_confidence_gate_gate_threshold_above_100_returns_false`, `test_confidence_gate_min_confidence_above_100_returns_false`),
-[`test_gate_enforcement.rs`](../contracts/ledgerlens-score/src/test_gate_enforcement.rs) (`test_strict_mode_unlisted_caller_returns_false`).
+[`test_gate_enforcement.rs`](../contracts/scoregate-score/src/test_gate_enforcement.rs) (`test_strict_mode_unlisted_caller_returns_false`).
 
 **⚠️ Known exception — `query_risk_gate_relative` does not follow this pattern.** Unlike
 `query_risk_gate` / `query_risk_gate_with_confidence` (which return a plain `bool` and are
@@ -57,10 +57,10 @@ infallible), `query_risk_gate_relative` returns `Result<bool, Error>` — it can
 `Err(Error::InvalidThreshold)` or propagate `Err(Error::ScoreNotFound)` from
 `get_score_percentile`. An integrator who calls `try_query_risk_gate_relative` and doesn't
 explicitly treat every `Err` branch as "deny" can accidentally fail *open*. This function is also
-absent from [`docs/interface-spec.md`](interface-spec.md)'s formal `ILedgerLensScore` listing and
+absent from [`docs/interface-spec.md`](interface-spec.md)'s formal `IScoreGateScore` listing and
 from the `supports_interface` doc-comment's capability table (though its `rgate` capability
 symbol is present in the actual `supports_interface` match arms — see §4's gap note below).
-Tested in [`test_histogram.rs`](../contracts/ledgerlens-score/src/test_histogram.rs), but not
+Tested in [`test_histogram.rs`](../contracts/scoregate-score/src/test_histogram.rs), but not
 flagged anywhere as a deliberately different contract from the other two gates. **This is
 documentation of existing behavior, not a proposal to change the signature** — changing it to an
 infallible `bool` would itself be a breaking ABI change requiring the 30-day notice process in
@@ -77,7 +77,7 @@ this divergence prominently in `interface-spec.md` and the function's own doc co
 helpers they call — must never panic, for any input. A panic in a cross-contract call traps the
 *caller's* transaction; since these functions exist specifically to be called from inside another
 protocol's guard clause, a crafted input that panics one of them is a denial-of-service primitive
-against every integrator, not just LedgerLens itself. (This is distinct from `require_auth()`
+against every integrator, not just ScoreGate itself. (This is distinct from `require_auth()`
 panics on state-*mutating* admin/service functions — those are Soroban's own, intentional
 auth-failure mechanism, not a violation of this invariant. The gate/read functions in scope here
 take no `admin_signers`/`service` parameter and call no `require_auth()` at all — they are
@@ -85,15 +85,15 @@ deliberately permissionless.)
 
 **Where implemented:**
 - `get_score` returns `Result<RiskScore, Error>` via `.ok_or(Error::ScoreNotFound)` — no `unwrap`/`expect`/`panic!`.
-- `peek_score`, `peek_score_delegate`, `peek_is_embargoed` in [`storage.rs`](../contracts/ledgerlens-score/src/storage.rs)
+- `peek_score`, `peek_score_delegate`, `peek_is_embargoed` in [`storage.rs`](../contracts/scoregate-score/src/storage.rs)
   contain no `unwrap`/`expect`/`panic!`.
 - `peek_risk_band_state` uses `.unwrap_or(false)` — a safe default, not a panic risk.
 - `query_risk_gate_with_confidence` itself contains no `unwrap`/`expect`/`panic!` in its body.
 
-**Tests:** [`error_coverage.rs`](../contracts/ledgerlens-score/src/error_coverage.rs) exercises
+**Tests:** [`error_coverage.rs`](../contracts/scoregate-score/src/error_coverage.rs) exercises
 every declared error path (see §4), which indirectly proves those paths return typed errors
 rather than panicking. There is **no dedicated adversarial/fuzz test for the read/gate path**
-analogous to [`test_fuzz_submit_score.rs`](../contracts/ledgerlens-score/src/test_fuzz_submit_score.rs),
+analogous to [`test_fuzz_submit_score.rs`](../contracts/scoregate-score/src/test_fuzz_submit_score.rs),
 which runs thousands of deterministically-seeded inputs against `submit_score` specifically. Given
 the gate functions are the primary cross-contract attack surface, **this is a real coverage gap**:
 recommend a `test_fuzz_query_risk_gate.rs` modeled on the existing fuzz harness, covering
@@ -110,7 +110,7 @@ not a byproduct of a documentation pass.
 index that grows from user/service/admin action has a `MAX_*` constant, and the write path that
 would exceed it returns a typed `Error` instead of silently succeeding.
 
-**Where implemented — [`constants.rs`](../contracts/ledgerlens-score/src/constants.rs) is the
+**Where implemented — [`constants.rs`](../contracts/scoregate-score/src/constants.rs) is the
 single source of truth for every cap:**
 
 | Constant | Value | Guards |
@@ -147,17 +147,17 @@ operations that iterate them (`revoke_all_embargoes`, TTL-sweep) to a single tra
 — see the doc comments at each constant's definition in `constants.rs` for the specific operation
 each one bounds. There is currently no dedicated benchmark asserting the worst case (e.g. an
 `MAX_OPEN_DISPUTES`-sized dispute index, or a full `MAX_HISTORY_DEPTH` ring buffer) stays under a
-specific CPU-instruction budget — `contracts/ledgerlens-score/benches/` has benchmarks for some
+specific CPU-instruction budget — `contracts/scoregate-score/benches/` has benchmarks for some
 hot paths but not an exhaustive one per cap. Flagging as a gap: a benchmark suite that fills each
 bounded collection to its `MAX_*` and asserts the operation's `env.budget()` cost stays within a
 committed ceiling would make "bounded" verifiable rather than just structurally true.
 
 **Tests:** cap-enforcement is covered by dedicated cases in
-[`error_coverage.rs`](../contracts/ledgerlens-score/src/error_coverage.rs) for every `*Full`/`*TooLarge`
+[`error_coverage.rs`](../contracts/scoregate-score/src/error_coverage.rs) for every `*Full`/`*TooLarge`
 error variant (one test per variant, see §4), plus targeted suites such as
-[`test_bulk_signer_tier.rs`](../contracts/ledgerlens-score/src/test_bulk_signer_tier.rs),
-[`test_batch_watchlist.rs`](../contracts/ledgerlens-score/src/test_batch_watchlist.rs), and
-[`test_ttl_rent_manager.rs`](../contracts/ledgerlens-score/src/test_ttl_rent_manager.rs).
+[`test_bulk_signer_tier.rs`](../contracts/scoregate-score/src/test_bulk_signer_tier.rs),
+[`test_batch_watchlist.rs`](../contracts/scoregate-score/src/test_batch_watchlist.rs), and
+[`test_ttl_rent_manager.rs`](../contracts/scoregate-score/src/test_ttl_rent_manager.rs).
 
 ---
 
@@ -169,7 +169,7 @@ renumbered, renamed, reordered, or removed — only appended to.
 
 ### 4a. Errors
 
-**Where implemented:** [`errors.rs`](../contracts/ledgerlens-score/src/errors.rs)'s `Error` enum
+**Where implemented:** [`errors.rs`](../contracts/scoregate-score/src/errors.rs)'s `Error` enum
 is hard-capped at 50 variants (a Soroban XDR spec limit). Because of that ceiling, new *semantic*
 error names are added as `pub const` aliases inside `impl Error` that map to an **existing**
 discriminant (e.g. `pub const PairPaused: Error = Error::ContractPaused;`) rather than as new enum
@@ -182,7 +182,7 @@ remaining discriminant budget or touching a value already in use.
    It diffs `errors.rs`'s enum body between the PR base and head ref and fails the build if any
    existing discriminant was renumbered, renamed, or removed. New discriminants and new aliases
    always pass.
-2. **Test suite:** [`error_coverage.rs`](../contracts/ledgerlens-score/src/error_coverage.rs) has
+2. **Test suite:** [`error_coverage.rs`](../contracts/scoregate-score/src/error_coverage.rs) has
    exactly one dedicated regression test per `Error` variant (50 tests for 50 variants, one
    `#[test] fn test_error_<name>()` each) asserting the exact code is returned from the real
    trigger condition — not just that the variant exists.
@@ -196,13 +196,13 @@ which run in CI. Use it as the template if extending equivalent coverage to even
 
 ### 4b. Events
 
-**Where implemented:** [`events.rs`](../contracts/ledgerlens-score/src/events.rs) defines
+**Where implemented:** [`events.rs`](../contracts/scoregate-score/src/events.rs) defines
 `EVENT_VERSION: u32 = 1`, documented as: append a field to a payload without bumping it; bump it
 if you change a field's meaning, order, or remove one. Every event-emitting function publishes
 `EVENT_VERSION` as the second element of its topic tuple, e.g.
 `(symbol_short!("score"), EVENT_VERSION, wallet.clone(), asset_pair.clone())`.
 
-**Enforced by:** [`event_emission.rs`](../contracts/ledgerlens-score/src/event_emission.rs)'s
+**Enforced by:** [`event_emission.rs`](../contracts/scoregate-score/src/event_emission.rs)'s
 `test_all_events_carry_schema_version`, which asserts every event captured during the test carries
 `EVENT_VERSION` at topic index 1.
 
@@ -249,7 +249,7 @@ relative to the base ref would close this at the same layer errors are already p
 
 ### 4c. Interface / capability registry
 
-**Where implemented:** `supports_interface` in [`lib.rs`](../contracts/ledgerlens-score/src/lib.rs)
+**Where implemented:** `supports_interface` in [`lib.rs`](../contracts/scoregate-score/src/lib.rs)
 is documented in [`docs/interface-versioning-policy.md`](interface-versioning-policy.md) as an
 append-only capability registry — once a symbol is published, it's never removed or repurposed.
 

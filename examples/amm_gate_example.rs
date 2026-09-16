@@ -1,15 +1,15 @@
 // Example only — not production code
 
-//! Minimal AMM swap implementation with LedgerLens risk gating.
+//! Minimal AMM swap implementation with ScoreGate risk gating.
 //!
 //! This example demonstrates:
-//! - Importing the LedgerLens contract client.
+//! - Importing the ScoreGate contract client.
 //! - Calling `query_risk_gate` from within a swap function.
 //! - Handling the gate result and rejecting high-risk wallets.
 
 #![no_std]
 
-use ledgerlens_score::LedgerLensScoreContractClient;
+use scoregate_score::ScoreGateScoreContractClient;
 use soroban_sdk::{contract, contracterror, contractimpl, Address, Env, Symbol};
 
 #[contracterror]
@@ -24,7 +24,7 @@ pub struct SimpleAMM;
 
 #[contractimpl]
 impl SimpleAMM {
-    /// Execute a swap between two tokens, enforcing LedgerLens risk gating.
+    /// Execute a swap between two tokens, enforcing ScoreGate risk gating.
     ///
     /// Before proceeding with the swap, this function calls `query_risk_gate`
     /// to verify that the user's risk score is below the specified threshold.
@@ -35,11 +35,11 @@ impl SimpleAMM {
         user: Address,
         asset_pair: Symbol,
         amount_in: u64,
-        ledgerlens_id: Address,
+        scoregate_id: Address,
         gate_threshold: u32,
     ) -> Result<u64, AmmError> {
-        // 1. Build the LedgerLens client
-        let client = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+        // 1. Build the ScoreGate client
+        let client = ScoreGateScoreContractClient::new(&env, &scoregate_id);
 
         // 2. Call query_risk_gate to check the user's risk score
         // This function returns bool: true if score < threshold, false otherwise.
@@ -68,7 +68,7 @@ impl SimpleAMM {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use ledgerlens_score::LedgerLensScoreContract;
+    use scoregate_score::ScoreGateScoreContract;
     use soroban_sdk::testutils::{Address as _, Ledger as _};
     use soroban_sdk::{symbol_short, Vec};
 
@@ -76,35 +76,35 @@ mod tests {
 
     struct Fixture<'a> {
         env: Env,
-        ledgerlens: LedgerLensScoreContractClient<'a>,
-        ledgerlens_id: Address,
+        scoregate: ScoreGateScoreContractClient<'a>,
+        scoregate_id: Address,
         amm: SimpleAMMClient<'a>,
     }
 
-    /// Deploys a real `LedgerLensScoreContract` plus a real `SimpleAMM` in the
+    /// Deploys a real `ScoreGateScoreContract` plus a real `SimpleAMM` in the
     /// same `Env`, so `swap` exercises the actual cross-contract call to
     /// `query_risk_gate` rather than a mocked gate check.
     fn setup<'a>() -> Fixture<'a> {
         let env = Env::default();
         env.mock_all_auths();
 
-        let ledgerlens_id = env.register_contract(None, LedgerLensScoreContract);
-        let ledgerlens = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+        let scoregate_id = env.register_contract(None, ScoreGateScoreContract);
+        let scoregate = ScoreGateScoreContractClient::new(&env, &scoregate_id);
         let admin = Address::generate(&env);
         let service = Address::generate(&env);
-        ledgerlens.initialize(&admin, &service);
+        scoregate.initialize(&admin, &service);
 
         let amm_id = env.register_contract(None, SimpleAMM);
         let amm = SimpleAMMClient::new(&env, &amm_id);
 
-        Fixture { env, ledgerlens, ledgerlens_id, amm }
+        Fixture { env, scoregate, scoregate_id, amm }
     }
 
     /// Submits a score for `wallet`, advancing the ledger past the 1-hour
     /// cooldown first so repeated submissions in the same test never collide.
     fn submit_score(fixture: &Fixture, wallet: &Address, score: u32) {
         fixture.env.ledger().with_mut(|l| l.timestamp += 3_601);
-        fixture.ledgerlens.submit_score(
+        fixture.scoregate.submit_score(
             &Vec::new(&fixture.env),
             wallet,
             &symbol_short!("XLM_USDC"),
@@ -128,7 +128,7 @@ mod tests {
             &user,
             &symbol_short!("XLM_USDC"),
             &1_000_000,
-            &fixture.ledgerlens_id,
+            &fixture.scoregate_id,
             &GATE_THRESHOLD,
         );
 
@@ -145,7 +145,7 @@ mod tests {
             &user,
             &symbol_short!("XLM_USDC"),
             &1_000_000,
-            &fixture.ledgerlens_id,
+            &fixture.scoregate_id,
             &GATE_THRESHOLD,
         );
 
@@ -161,7 +161,7 @@ mod tests {
             &user,
             &symbol_short!("XLM_USDC"),
             &1_000_000,
-            &fixture.ledgerlens_id,
+            &fixture.scoregate_id,
             &GATE_THRESHOLD,
         );
 

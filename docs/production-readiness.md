@@ -1,4 +1,4 @@
-# Production Readiness Review — LedgerLens Score Contract
+# Production Readiness Review — ScoreGate Score Contract
 
 > **Issue:** #635
 > **Status:** Draft
@@ -13,7 +13,7 @@ Before production activation, the following criteria must be met. Each criterion
 | R1 | All native workspace tests pass | Author | Any failure | CI run log, `cargo test --workspace` |
 | R2 | `cargo clippy --all-targets -- -D warnings` passes | Author | Any warning | CI run log |
 | R3 | `cargo fmt --all -- --check` passes | Author | Any diff | CI run log |
-| R4 | Locked release WASM build succeeds | Author | Build failure | `cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked` log |
+| R4 | Locked release WASM build succeeds | Author | Build failure | `cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked` log |
 | R5 | Reproducible build (two independent builds produce identical WASM) | Author | SHA-256 mismatch | CI reproducible-build job output |
 | R6 | Error discriminant stability check passes | Author | Any regression | `tools/check_error_discriminants.sh` output |
 | R7 | Wasm size within budget | Author | Exceeds `wasm-size-budget.md` limit | `scripts/wasm-size-report.sh` output |

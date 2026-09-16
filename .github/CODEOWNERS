@@ -1,24 +1,24 @@
 # .github/CODEOWNERS
-# Mandatory review routing for LedgerLens security-sensitive paths
+# Mandatory review routing for ScoreGate security-sensitive paths
 
 # Smart Contracts & Domain Logic
-/contracts/ledgerlens-score/src/    @LedgerLens/arch-reviewers
-/contracts/ledgerlens-aggregator/src/ @LedgerLens/arch-reviewers
+/contracts/scoregate-score/src/    @ScoreGate/arch-reviewers
+/contracts/scoregate-aggregator/src/ @ScoreGate/arch-reviewers
 
 # Documentation & Specifications
-/docs/                               @LedgerLens/arch-reviewers
-/spec/                               @LedgerLens/arch-reviewers
-/SECURITY.md                         @LedgerLens/arch-reviewers
+/docs/                               @ScoreGate/arch-reviewers
+/spec/                               @ScoreGate/arch-reviewers
+/SECURITY.md                         @ScoreGate/arch-reviewers
 
 # Build Configuration & Tooling
-/Cargo.toml                          @LedgerLens/arch-reviewers
-/tools/                              @LedgerLens/arch-reviewers
+/Cargo.toml                          @ScoreGate/arch-reviewers
+/tools/                              @ScoreGate/arch-reviewers
 
 # Operational & Deployment Scripts
 # Gate production (canary-deploy, rollback, key-rotation rehearsal) and encrypted mainnet manifests
-/scripts/                            @LedgerLens/arch-reviewers
-/deploy/                             @LedgerLens/arch-reviewers
+/scripts/                            @ScoreGate/arch-reviewers
+/deploy/                             @ScoreGate/arch-reviewers
 
 # Reference & Integration Tests
-/examples/                           @LedgerLens/arch-reviewers
-/tests/                              @LedgerLens/arch-reviewers
+/examples/                           @ScoreGate/arch-reviewers
+/tests/                              @ScoreGate/arch-reviewers

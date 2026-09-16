@@ -29,7 +29,7 @@ body:
         - Security & cryptography (attestation, ZK, Verkle)
         - Governance & admin (multisig, parameter governance, upgrades)
         - Composability & gate semantics (query_risk_gate*)
-        - Aggregator / cross-contract (ledgerlens-aggregator, mocks)
+        - Aggregator / cross-contract (scoregate-aggregator, mocks)
         - SDK / tooling (tools/, scripts/)
         - Other (specify in Summary)
     validations:
@@ -41,8 +41,8 @@ body:
       label: Relevant files
       description: Files you expect to touch. Update this list as scope becomes clearer — it doesn't need to be exhaustive up front.
       placeholder: |
-        contracts/ledgerlens-score/src/lib.rs
-        contracts/ledgerlens-score/src/storage.rs
+        contracts/scoregate-score/src/lib.rs
+        contracts/scoregate-score/src/storage.rs
     validations:
       required: true
 
@@ -98,7 +98,7 @@ body:
       description: >
         For the worst relevant case (e.g. a collection at its `MAX_*` cap, a batch at `MAX_BATCH_SIZE`), is cost
         bounded by construction (cite the cap) or benchmarked (link a Criterion bench under
-        contracts/ledgerlens-score/benches/, per docs/wasm-size-budget.md)? If this task adds no new loop or
+        contracts/scoregate-score/benches/, per docs/wasm-size-budget.md)? If this task adds no new loop or
         collection, say so.
     validations:
       required: true
@@ -109,7 +109,7 @@ body:
       label: Out of scope
       value: |
         - Cosmetic refactors that do not support the stated behavior.
-        - Replacing the LedgerLens risk model or off-chain scoring pipeline unless explicitly required by this issue.
+        - Replacing the ScoreGate risk model or off-chain scoring pipeline unless explicitly required by this issue.
         - Broad rewrites without compatibility and migration notes.
     validations:
       required: false

@@ -148,7 +148,7 @@ cargo +nightly bench --features bench 2>&1 | grep -E "submit_score|get_score"
 **Verification**:
 ```bash
 # Compute deployment hash for sign-off
-DEPLOYMENT_HASH=$(sha256sum build/ledgerlens_score.wasm | cut -d' ' -f1)
+DEPLOYMENT_HASH=$(sha256sum build/scoregate_score.wasm | cut -d' ' -f1)
 echo "Deployment Hash: $DEPLOYMENT_HASH" > DEPLOYMENT.txt
 gpg --sign --armor DEPLOYMENT.txt
 
@@ -205,7 +205,7 @@ Store in: `/deployments/v<VERSION>/DEPLOYMENT.txt.asc`
 **Testnet Verification Checklist**:
 ```bash
 # Deploy to testnet
-./deploy.sh --network testnet --wasm ledgerlens_score.wasm
+./deploy.sh --network testnet --wasm scoregate_score.wasm
 
 # Run smoke tests
 cargo test --test '*' -- --ignored --network testnet
@@ -353,7 +353,7 @@ All systems nominal ✓
 
 ### Audit Trail Verification
 
-- [ ] Complete event history exported: `ledgerlens_events_v1.2.3.json`
+- [ ] Complete event history exported: `scoregate_events_v1.2.3.json`
 - [ ] Event schema verified against documentation
 - [ ] Correlation IDs reconstructed for all workflows
 - [ ] State reproducible from events alone
@@ -426,7 +426,7 @@ Rollback immediately if:
    ```bash
    git checkout v<PREVIOUS_VERSION>
    cargo build --release
-   ROLLBACK_HASH=$(sha256sum build/ledgerlens_score.wasm | cut -d' ' -f1)
+   ROLLBACK_HASH=$(sha256sum build/scoregate_score.wasm | cut -d' ' -f1)
    ```
 
 3. **Propose rollback**

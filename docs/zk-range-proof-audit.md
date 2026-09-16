@@ -1,9 +1,9 @@
 # Security Audit: `zk_range_proof.rs`
 
-**Scope:** `contracts/ledgerlens-score/src/zk_range_proof.rs` (hand-rolled Curve25519
+**Scope:** `contracts/scoregate-score/src/zk_range_proof.rs` (hand-rolled Curve25519
 field arithmetic, Ed25519 point arithmetic, and a Bulletproofs-style ZK range
 proof), and its single call site, `verify_score_range_proof` in
-`contracts/ledgerlens-score/src/lib.rs`.
+`contracts/scoregate-score/src/lib.rs`.
 
 **Method:** Manual/static code review (line-by-line reading of the arithmetic,
 the prover, the verifier, and the on-chain integration) plus algebraic
@@ -97,13 +97,13 @@ not merely be a *different point*.
 and the soundness of the "score < threshold" proof are undermined at the
 generator-construction level, independent of anything else in the file being
 correct. In the worst case this could allow a party who controls the
-committed score (the LedgerLens service, or anyone who can see a commitment)
+committed score (the ScoreGate service, or anyone who can see a commitment)
 to produce a range proof that verifies successfully without the underlying
 statement being true.
 
 **Recommendation:** Replace the multiplicative small-integer generators with
 a standard nothing-up-my-sleeve construction — e.g. derive each of
-`h, g_0..g_7, h_0..h_7` as `hash_to_curve("LedgerLens-Bulletproof-<label>-<i>")`
+`h, g_0..g_7, h_0..h_7` as `hash_to_curve("ScoreGate-Bulletproof-<label>-<i>")`
 using a documented, deterministic hash-to-curve method (Elligator2 for
 Ed25519/Curve25519, as used by `curve25519-dalek`'s `RistrettoPoint::
 hash_from_bytes`, or an equivalent try-and-increment construction), so that no
@@ -118,7 +118,7 @@ detail (e.g. a worked numeric forgery) is intentionally omitted from this
 public document. The mechanism above is sufficient for a maintainer or
 auditor to reproduce and confirm the break. Given the "Maybe Rewarded" /
 active-campaign labels on issue #396, whoever triages this PR should also
-loop in `security@ledgerlens.io` directly rather than relying solely on this
+loop in `security@scoregate.io` directly rather than relying solely on this
 PR sitting in the public review queue, and should treat any *already-live*
 deployment that uses this contract for real economic gating as at-risk until
 fixed.

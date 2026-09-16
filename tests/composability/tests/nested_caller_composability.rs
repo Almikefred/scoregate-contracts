@@ -1,30 +1,30 @@
 //! Composability tests for nested contract-as-caller flows (issue #716).
 //!
 //! The existing composability suite in `test_composability.rs` exercises AMM
-//! and lending contracts that call LedgerLens directly. This file covers the
+//! and lending contracts that call ScoreGate directly. This file covers the
 //! deeper scenario: a downstream protocol (mock-amm or mock-lending) that is
 //! itself invoked by a *third* caller contract rather than by a test directly,
 //! forming a three-level invocation chain:
 //!
-//!   Test → Intermediate caller → Mock AMM/Lending → LedgerLens
+//!   Test → Intermediate caller → Mock AMM/Lending → ScoreGate
 //!
 //! Acceptance criteria from issue #716:
-//! - Authorization holds at every depth: LedgerLens never sees a caller it
+//! - Authorization holds at every depth: ScoreGate never sees a caller it
 //!   should reject just because the call traverses more than one hop.
 //! - Read-only behavior is preserved: no state mutation propagates through the
 //!   chain unless the outermost call explicitly requested a write.
 //! - Fail-closed semantics hold end-to-end: a high-risk or unknown wallet is
-//!   rejected at the gate even when the gate call reaches LedgerLens through
+//!   rejected at the gate even when the gate call reaches ScoreGate through
 //!   an intermediate contract.
 //!
 //! Implementation note: Soroban's test environment does not provide a built-in
 //! way to deploy and invoke an arbitrary "pass-through" caller contract written
 //! inline, so these tests exercise the next-deepest available path — calling
-//! the mock contracts' own entry-points (which internally call LedgerLens)
+//! the mock contracts' own entry-points (which internally call ScoreGate)
 //! from a second registered MockAmm or MockLending instance, validating that
 //! the authorization and gate checks survive the additional hop.
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use mock_amm::{FailPolicy as AmmFailPolicy, MockAmm, MockAmmClient, MockAmmError};
 use mock_lending::{MockLending, MockLendingClient, MockLendingError};
 use soroban_sdk::{
@@ -36,13 +36,13 @@ use soroban_sdk::{
 const GATE_THRESHOLD: u32 = 75;
 const MIN_CONFIDENCE: u32 = 50;
 
-/// Full fixture: LedgerLens + two independently configured AMM instances that
-/// both point at the same LedgerLens deployment. The "outer" AMM simulates the
+/// Full fixture: ScoreGate + two independently configured AMM instances that
+/// both point at the same ScoreGate deployment. The "outer" AMM simulates the
 /// role of an intermediate caller; the "inner" AMM is the downstream protocol
 /// that actually invokes the gate.
 struct NestedAmmFixture<'a> {
     env: Env,
-    ledgerlens: LedgerLensScoreContractClient<'a>,
+    scoregate: ScoreGateScoreContractClient<'a>,
     /// Outer protocol: invoked by the test (top of the chain).
     outer_amm: MockAmmClient<'a>,
     /// Inner protocol: the "downstream" that the outer protocol would route to.
@@ -54,16 +54,16 @@ fn setup_nested_amm<'a>() -> NestedAmmFixture<'a> {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 200_000);
 
-    let ledgerlens_id = env.register_contract(None, LedgerLensScoreContract);
-    let ledgerlens = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+    let scoregate_id = env.register_contract(None, ScoreGateScoreContract);
+    let scoregate = ScoreGateScoreContractClient::new(&env, &scoregate_id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
-    ledgerlens.initialize(&admin, &service);
+    scoregate.initialize(&admin, &service);
 
     // Outer AMM — represents the intermediate-protocol layer.
     let outer_amm_id = env.register_contract(None, MockAmm);
     let outer_amm = MockAmmClient::new(&env, &outer_amm_id);
-    outer_amm.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD);
+    outer_amm.initialize(&admin, &scoregate_id, &GATE_THRESHOLD);
     outer_amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -74,11 +74,11 @@ fn setup_nested_amm<'a>() -> NestedAmmFixture<'a> {
     );
 
     // Inner AMM — represents the downstream protocol that the outer AMM
-    // delegates into. Both consult the same LedgerLens instance so
+    // delegates into. Both consult the same ScoreGate instance so
     // any state written by one is visible to the other.
     let inner_amm_id = env.register_contract(None, MockAmm);
     let inner_amm = MockAmmClient::new(&env, &inner_amm_id);
-    inner_amm.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD);
+    inner_amm.initialize(&admin, &scoregate_id, &GATE_THRESHOLD);
     inner_amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -88,14 +88,14 @@ fn setup_nested_amm<'a>() -> NestedAmmFixture<'a> {
         &0,
     );
 
-    NestedAmmFixture { env, ledgerlens, outer_amm, inner_amm }
+    NestedAmmFixture { env, scoregate, outer_amm, inner_amm }
 }
 
-/// Submits a score for `wallet` on `ledgerlens`, advancing the ledger
+/// Submits a score for `wallet` on `scoregate`, advancing the ledger
 /// past the cooldown window first.
 fn submit(f: &NestedAmmFixture, wallet: &Address, score: u32, confidence: u32) {
     f.env.ledger().with_mut(|l| l.timestamp += 3_601);
-    f.ledgerlens.submit_score(
+    f.scoregate.submit_score(
         &Vec::new(&f.env),
         wallet,
         &symbol_short!("XLM_USDC"),
@@ -113,7 +113,7 @@ fn submit(f: &NestedAmmFixture, wallet: &Address, score: u32, confidence: u32) {
 
 /// A high-risk wallet must be blocked by both the outer and inner AMMs.
 /// Neither hop should allow the wallet through because each independently
-/// checks the same LedgerLens gate.
+/// checks the same ScoreGate gate.
 #[test]
 fn nested_amm_both_hops_reject_high_risk_wallet() {
     let f = setup_nested_amm();
@@ -146,7 +146,7 @@ fn nested_amm_both_hops_reject_unknown_wallet() {
     let unknown = Address::generate(&f.env);
 
     let outer_result = f.outer_amm.try_swap(&unknown, &symbol_short!("XLM_USDC"), &500i128);
-    assert!(outer_result.is_err(), "outer AMM must reject wallet with no LedgerLens score");
+    assert!(outer_result.is_err(), "outer AMM must reject wallet with no ScoreGate score");
 
     let inner_result = f.inner_amm.try_swap(&unknown, &symbol_short!("XLM_USDC"), &500i128);
     assert!(inner_result.is_err(), "inner AMM must reject same unknown wallet");
@@ -155,7 +155,7 @@ fn nested_amm_both_hops_reject_unknown_wallet() {
 // ── #716-2: Authorization holds across nested invocation hops ────────────────
 
 /// A low-risk, high-confidence wallet must be accepted at every hop. The
-/// authorization check in LedgerLens (require_auth on score submission) must
+/// authorization check in ScoreGate (require_auth on score submission) must
 /// not block a legitimate query that arrives via multiple intermediate
 /// contracts, because `query_risk_gate` is a read-only call — no auth is
 /// required for reads.
@@ -174,23 +174,23 @@ fn nested_amm_both_hops_permit_low_risk_wallet() {
 
 // ── #716-3: Read-only behavior — no cross-hop state mutation ────────────────
 
-/// Calling `swap` on the outer AMM must not alter the LedgerLens score state
+/// Calling `swap` on the outer AMM must not alter the ScoreGate score state
 /// for the wallet: `get_score` before and after must return the same value.
 /// This confirms that `query_risk_gate` at every hop is genuinely read-only
 /// and does not mutate score storage.
 #[test]
-fn nested_amm_swap_does_not_mutate_ledgerlens_score_state() {
+fn nested_amm_swap_does_not_mutate_scoregate_score_state() {
     let f = setup_nested_amm();
     let wallet = Address::generate(&f.env);
 
     submit(&f, &wallet, 20, 85);
 
-    let score_before = f.ledgerlens.get_score(&wallet, &symbol_short!("XLM_USDC"));
+    let score_before = f.scoregate.get_score(&wallet, &symbol_short!("XLM_USDC"));
 
     // A successful swap through the outer AMM must not change the score.
     f.outer_amm.swap(&wallet, &symbol_short!("XLM_USDC"), &50i128);
 
-    let score_after = f.ledgerlens.get_score(&wallet, &symbol_short!("XLM_USDC"));
+    let score_after = f.scoregate.get_score(&wallet, &symbol_short!("XLM_USDC"));
     assert_eq!(
         score_before.score, score_after.score,
         "query_risk_gate called from a downstream contract must not mutate score storage"
@@ -199,7 +199,7 @@ fn nested_amm_swap_does_not_mutate_ledgerlens_score_state() {
 
 // ── #716-4: Nested lending + AMM composability ───────────────────────────────
 
-/// A wallet that is permitted by LedgerLens should be accepted by both an AMM
+/// A wallet that is permitted by ScoreGate should be accepted by both an AMM
 /// and a lending protocol in the same test environment, demonstrating that the
 /// gate check is consistent across different downstream protocol types in the
 /// same invocation graph.
@@ -209,14 +209,14 @@ fn nested_amm_and_lending_both_permit_low_risk_wallet() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 300_000);
 
-    let ledgerlens_id = env.register_contract(None, LedgerLensScoreContract);
-    let ledgerlens = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+    let scoregate_id = env.register_contract(None, ScoreGateScoreContract);
+    let scoregate = ScoreGateScoreContractClient::new(&env, &scoregate_id);
     let admin = Address::generate(&env);
-    ledgerlens.initialize(&admin, &Address::generate(&env));
+    scoregate.initialize(&admin, &Address::generate(&env));
 
     let amm_id = env.register_contract(None, MockAmm);
     let amm = MockAmmClient::new(&env, &amm_id);
-    amm.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD);
+    amm.initialize(&admin, &scoregate_id, &GATE_THRESHOLD);
     amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -228,11 +228,11 @@ fn nested_amm_and_lending_both_permit_low_risk_wallet() {
 
     let lending_id = env.register_contract(None, MockLending);
     let lending = MockLendingClient::new(&env, &lending_id);
-    lending.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
+    lending.initialize(&admin, &scoregate_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
 
     let wallet = Address::generate(&env);
     env.ledger().with_mut(|l| l.timestamp += 3_601);
-    ledgerlens.submit_score(
+    scoregate.submit_score(
         &Vec::new(&env),
         &wallet,
         &symbol_short!("XLM_USDC"),
@@ -258,14 +258,14 @@ fn nested_amm_and_lending_both_reject_high_risk_wallet() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 300_000);
 
-    let ledgerlens_id = env.register_contract(None, LedgerLensScoreContract);
-    let ledgerlens = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+    let scoregate_id = env.register_contract(None, ScoreGateScoreContract);
+    let scoregate = ScoreGateScoreContractClient::new(&env, &scoregate_id);
     let admin = Address::generate(&env);
-    ledgerlens.initialize(&admin, &Address::generate(&env));
+    scoregate.initialize(&admin, &Address::generate(&env));
 
     let amm_id = env.register_contract(None, MockAmm);
     let amm = MockAmmClient::new(&env, &amm_id);
-    amm.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD);
+    amm.initialize(&admin, &scoregate_id, &GATE_THRESHOLD);
     amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -277,11 +277,11 @@ fn nested_amm_and_lending_both_reject_high_risk_wallet() {
 
     let lending_id = env.register_contract(None, MockLending);
     let lending = MockLendingClient::new(&env, &lending_id);
-    lending.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
+    lending.initialize(&admin, &scoregate_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
 
     let wallet = Address::generate(&env);
     env.ledger().with_mut(|l| l.timestamp += 3_601);
-    ledgerlens.submit_score(
+    scoregate.submit_score(
         &Vec::new(&env),
         &wallet,
         &symbol_short!("XLM_USDC"),

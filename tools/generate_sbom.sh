@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-# Generates a CycloneDX Software Bill of Materials (SBOM) for the LedgerLens
+# Generates a CycloneDX Software Bill of Materials (SBOM) for the ScoreGate
 # workspace as compiled for the wasm32-unknown-unknown target — i.e. the
-# dependency graph actually embedded in the released ledgerlens_score.wasm.
+# dependency graph actually embedded in the released scoregate_score.wasm.
 #
 # Prerequisites:
 #   cargo-cyclonedx (https://github.com/CycloneDX/cyclonedx-cargo)
@@ -11,7 +11,7 @@
 # Outputs:
 #   target/sbom/*.cdx.json                      — one CycloneDX 1.3 JSON SBOM
 #                                                per workspace package
-#   target/sbom/ledgerlens-score.cdx.json       — SBOM for the shipped contract
+#   target/sbom/scoregate-score.cdx.json       — SBOM for the shipped contract
 #                                                (its embedded dependency graph)
 #
 # This is the same script invoked by the `supply-chain` CI job so that the SBOM
@@ -40,8 +40,8 @@ for f in $(find . -name '*.cdx.json' -not -path './target/*'); do
 done
 
 # The released contract's own dependency graph must be present.
-if [ ! -f target/sbom/ledgerlens-score.cdx.json ]; then
-  echo "ERROR: ledgerlens-score.cdx.json not generated" >&2
+if [ ! -f target/sbom/scoregate-score.cdx.json ]; then
+  echo "ERROR: scoregate-score.cdx.json not generated" >&2
   exit 1
 fi
 

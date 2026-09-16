@@ -2,7 +2,7 @@
 
 ## Overview
 
-LedgerLens provides real-time, on-chain risk scores for wallet-asset-pair combinations. When integrating into an Automated Market Maker (AMM), the `query_risk_gate` function allows you to enforce risk-based access control before allowing swaps to proceed. This prevents high-risk wallets from trading on your pool without explicit consent, enabling AMMs to serve compliant venues while maintaining DeFi's openness.
+ScoreGate provides real-time, on-chain risk scores for wallet-asset-pair combinations. When integrating into an Automated Market Maker (AMM), the `query_risk_gate` function allows you to enforce risk-based access control before allowing swaps to proceed. This prevents high-risk wallets from trading on your pool without explicit consent, enabling AMMs to serve compliant venues while maintaining DeFi's openness.
 
 **Why it matters:**
 - **Compliance:** Automatically block transactions from wallets flagged as high-risk without requiring manual intervention.
@@ -17,14 +17,14 @@ Before you start, ensure you have:
 
 1. **A Stellar account** funded with XLM (to cover transaction fees on Soroban)
 2. **Soroban CLI** installed and configured (`soroban --version` to verify)
-3. **The LedgerLens contract ID** for your network (e.g., deployed contract address on Testnet or Mainnet)
+3. **The ScoreGate contract ID** for your network (e.g., deployed contract address on Testnet or Mainnet)
 4. **Rust toolchain** for Soroban smart contract development
 
 ---
 
 ## Step 1 — Understand query_risk_gate vs. peek
 
-LedgerLens provides two ways to check wallet risk:
+ScoreGate provides two ways to check wallet risk:
 
 | Aspect | `query_risk_gate` | `peek_effective_score` |
 |--------|-------------------|------------------------|
@@ -42,11 +42,11 @@ LedgerLens provides two ways to check wallet risk:
 
 ## Step 2 — Call query_risk_gate from Your Swap Function
 
-Inside your AMM contract's swap entrypoint, after parameter validation, invoke LedgerLens:
+Inside your AMM contract's swap entrypoint, after parameter validation, invoke ScoreGate:
 
 ```rust
 use soroban_sdk::{Address, Symbol, Env, symbol_short};
-use ledgerlens_score::LedgerLensScoreContractClient;
+use scoregate_score::ScoreGateScoreContractClient;
 
 #[contractimpl]
 impl MyAMM {
@@ -58,8 +58,8 @@ impl MyAMM {
         amount: i128,
     ) -> Result<i128, AMMError> {
         // 1. Check user's risk gate before proceeding with swap
-        let llens_id = Address::from_contract_id(&env, &LEDGERLENS_CONTRACT_ID);
-        let client = LedgerLensScoreContractClient::new(&env, &llens_id);
+        let llens_id = Address::from_contract_id(&env, &SCOREGATE_CONTRACT_ID);
+        let client = ScoreGateScoreContractClient::new(&env, &llens_id);
         
         let asset_pair = symbol_short!("XLM_USDC"); // Adjust to your pools
         let gate_threshold = 75; // Adjust based on your risk appetite
@@ -80,7 +80,7 @@ impl MyAMM {
 **Key details:**
 - **Infallible:** `query_risk_gate` returns `bool`, never panics, never returns `Result`.
 - **Side-effect free:** Does not extend TTL or charge fees.
-- **Conservative:** A wallet with no LedgerLens score returns `false` (treated as risky).
+- **Conservative:** A wallet with no ScoreGate score returns `false` (treated as risky).
 - **Threshold interpretation:** The gate returns `true` only when `score < gate_threshold`. A score of exactly 75 fails the gate if your threshold is 75.
 
 ---
@@ -113,7 +113,7 @@ All of these cases collapse to a single `false` return, so your swap logic can b
 - **Threshold 50**: Blocks wallets in the top 50% of risk. Conservative; may reject many wallets.
 - **Threshold 90**: Blocks only the highest-risk wallets. Permissive; allows more volume.
 
-LedgerLens's own default threshold is 75. Adjust based on your pool's risk tolerance and total value locked.
+ScoreGate's own default threshold is 75. Adjust based on your pool's risk tolerance and total value locked.
 
 ---
 
@@ -211,7 +211,7 @@ match client.get_score(&user, &asset_pair) {
 ## Example: Complete AMM Swap with Risk Gating
 
 See `examples/amm_gate_example.rs` for a working, compilable Rust snippet that demonstrates:
-1. Importing the LedgerLens client.
+1. Importing the ScoreGate client.
 2. Calling `query_risk_gate` in a swap function.
 3. Handling the gate result and returning appropriate errors.
 4. A test stub showing the happy path.
@@ -220,12 +220,12 @@ See `examples/amm_gate_example.rs` for a working, compilable Rust snippet that d
 
 ## Troubleshooting
 
-**"Contract not found"**: Ensure the LedgerLens contract ID is correct and deployed on your network.
+**"Contract not found"**: Ensure the ScoreGate contract ID is correct and deployed on your network.
 
-**"Service silence alert"**: The LedgerLens service has not submitted updates recently. Decide whether to allow swaps during this window (e.g., fall back to a default threshold) or reject them until the service resumes.
+**"Service silence alert"**: The ScoreGate service has not submitted updates recently. Decide whether to allow swaps during this window (e.g., fall back to a default threshold) or reject them until the service resumes.
 
 **Gate always returns `false`**: Check that:
-1. The wallet has a score in LedgerLens (call `get_score` to verify).
+1. The wallet has a score in ScoreGate (call `get_score` to verify).
 2. The `gate_threshold` is in the valid range 0–100.
 3. The wallet is not embargoed.
 
@@ -235,4 +235,4 @@ See `examples/amm_gate_example.rs` for a working, compilable Rust snippet that d
 
 - **Interface specification:** [`docs/interface-spec.md`](interface-spec.md)
 - **Score query guide:** [`docs/score-query-guide.md`](score-query-guide.md)
-- **Contract source:** `contracts/ledgerlens-score/src/lib.rs`
+- **Contract source:** `contracts/scoregate-score/src/lib.rs`

@@ -4,7 +4,7 @@ Issue: #695 — Add administrative capability partitioning by operation risk.
 
 ## The problem this closes
 
-Before this change, every privileged endpoint in `ledgerlens-score` —
+Before this change, every privileged endpoint in `scoregate-score` —
 pausing the contract, changing score-gating parameters, proposing a WASM
 upgrade, and managing the admin signer set itself — was gated by exactly
 the same check: `require_admin_auth`, backed by one shared admin

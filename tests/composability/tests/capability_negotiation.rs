@@ -1,6 +1,6 @@
 //! Consumer-facing capability negotiation examples (issue #718).
 //!
-//! Demonstrates how a downstream contract should detect supported LedgerLens
+//! Demonstrates how a downstream contract should detect supported ScoreGate
 //! features **without** hardcoding a contract version number.  The canonical
 //! API is `supports_interface(capability: Symbol) -> bool`, which is stable
 //! across upgrades and is the only endorsed mechanism for feature detection.
@@ -31,22 +31,22 @@
 //! These are integration tests that drive real deployed contracts, not unit
 //! tests of the capability flag table.
 
-use ledgerlens_aggregator::{LedgerLensAggregator, LedgerLensAggregatorClient};
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_aggregator::{ScoreGateAggregator, ScoreGateAggregatorClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use soroban_sdk::{symbol_short, testutils::Address as _, Address, Env, Symbol};
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-fn deploy_score(env: &Env) -> LedgerLensScoreContractClient {
-    let id = env.register_contract(None, LedgerLensScoreContract);
-    let client = LedgerLensScoreContractClient::new(env, &id);
+fn deploy_score(env: &Env) -> ScoreGateScoreContractClient {
+    let id = env.register_contract(None, ScoreGateScoreContract);
+    let client = ScoreGateScoreContractClient::new(env, &id);
     client.initialize(&Address::generate(env), &Address::generate(env));
     client
 }
 
-fn deploy_aggregator(env: &Env) -> LedgerLensAggregatorClient {
-    let id = env.register_contract(None, LedgerLensAggregator);
-    let client = LedgerLensAggregatorClient::new(env, &id);
+fn deploy_aggregator(env: &Env) -> ScoreGateAggregatorClient {
+    let id = env.register_contract(None, ScoreGateAggregator);
+    let client = ScoreGateAggregatorClient::new(env, &id);
     client.initialize(&Address::generate(env));
     client
 }
@@ -211,14 +211,14 @@ fn score_shard_does_not_masquerade_as_aggregator_for_all_capabilities() {
 // ── Scenario 4: Recommended consumer gate pattern ─────────────────────────────
 //
 // The pattern below is what a downstream Soroban contract should implement
-// before invoking an optional LedgerLens feature.  It is reproduced here as a
+// before invoking an optional ScoreGate feature.  It is reproduced here as a
 // test so its correctness is mechanically verified, not just documented.
 
 /// Returns `true` when the target contract supports `query_risk_gate_with_confidence`.
 /// In production code this would be called once during an upgrade/migration
 /// check, not on every swap — `supports_interface` is a read-only, side-effect
 /// free function safe to cache.
-fn consumer_probe_confidence_gate(_env: &Env, contract: &LedgerLensScoreContractClient) -> bool {
+fn consumer_probe_confidence_gate(_env: &Env, contract: &ScoreGateScoreContractClient) -> bool {
     contract.supports_interface(&symbol_short!("cgate"))
 }
 

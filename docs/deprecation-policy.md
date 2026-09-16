@@ -6,7 +6,7 @@
 
 This document defines how old functions, return shapes, error codes, and
 capability symbols are supported, warned about, and eventually removed from the
-`ILedgerLensScore` composability surface.
+`IScoreGateScore` composability surface.
 
 ---
 
@@ -147,7 +147,7 @@ following this template:
 **Migration from `old_function_name` to `new_function_name`:**
 
 1. **Re-generate client bindings** after pointing at the new contract ID or
-   after upgrading the WASM. The generated `LedgerLensScoreContractClient`
+   after upgrading the WASM. The generated `ScoreGateScoreContractClient`
    will expose `new_function_name` automatically.
 
 2. **Update call sites:**
@@ -192,7 +192,7 @@ Use this checklist when progressing a symbol from **Deprecated** to **Removed**:
 ## 7. Test File
 
 Compatibility tests live in
-[`contracts/ledgerlens-score/src/test_deprecation_compat.rs`](../contracts/ledgerlens-score/src/test_deprecation_compat.rs).
+[`contracts/scoregate-score/src/test_deprecation_compat.rs`](../contracts/scoregate-score/src/test_deprecation_compat.rs).
 
 The module header explains which interface version each test guards. Do **not**
 delete tests from this file unless the sunset checklist above has been fully

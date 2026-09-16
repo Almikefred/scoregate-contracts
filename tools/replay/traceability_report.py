@@ -21,7 +21,7 @@ SUPPORTED_INPUT_VERSIONS = {"1.0.0"}
 
 
 def parse_args():
-    parser = argparse.ArgumentParser(description="LedgerLens Traceability Generator")
+    parser = argparse.ArgumentParser(description="ScoreGate Traceability Generator")
     parser.add_argument("--input", required=True)
     parser.add_argument("--output", required=True)
     parser.add_argument("--format", choices=["json", "human"], default="json")
@@ -153,7 +153,7 @@ def atomic_write(file_path, content):
 
 def generate_human_readable(report):
     lines = []
-    lines.append("=== LedgerLens Traceability Report ===")
+    lines.append("=== ScoreGate Traceability Report ===")
     lines.append(f"Status: {report['summary']['status']}")
     lines.append(f"Coverage: {report['summary']['coverage_percentage']}%")
     lines.append(f"Total Issues: {report['summary']['total_issues']}")

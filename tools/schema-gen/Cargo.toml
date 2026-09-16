@@ -6,7 +6,7 @@ description = "Spike PoC: generate JSON Schema / TypeScript / Python bindings fo
 
 [dependencies]
 anyhow = "1.0"
-ledgerlens-score = { path = "../../contracts/ledgerlens-score" }
+scoregate-score = { path = "../../contracts/scoregate-score" }
 serde_json = { version = "1.0", features = ["preserve_order"] }
 soroban-sdk = "21.0.0"
 soroban-spec = "21.7.7"

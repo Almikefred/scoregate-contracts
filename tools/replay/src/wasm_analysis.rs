@@ -357,8 +357,8 @@ mod tests {
     fn test_wasm_size_record() {
         let analysis = WasmBinaryAnalysis::new(1000000);
         let record =
-            WasmSizeRecord { contract_name: "ledgerlens-score".to_string(), version: "1.0.0".to_string(), analysis };
-        assert_eq!(record.contract_name, "ledgerlens-score");
+            WasmSizeRecord { contract_name: "scoregate-score".to_string(), version: "1.0.0".to_string(), analysis };
+        assert_eq!(record.contract_name, "scoregate-score");
         assert_eq!(record.version, "1.0.0");
     }
 

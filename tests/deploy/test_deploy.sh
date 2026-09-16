@@ -70,7 +70,7 @@ assert_not_contains() {
 run_help_case() {
   local output="$TMP_DIR/help.out"
   bash "$ROOT_DIR/deploy.sh" --help >"$output" 2>&1
-  assert_contains "$output" "Build, optimize, deploy and initialize the LedgerLens score contract."
+  assert_contains "$output" "Build, optimize, deploy and initialize the ScoreGate score contract."
   assert_contains "$output" "Usage:"
   assert_contains "$output" "./deploy.sh [options] <network> <admin-identity> <service-address>"
   assert_contains "$output" "--dry-run"

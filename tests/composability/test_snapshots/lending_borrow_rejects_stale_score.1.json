@@ -2416,7 +2416,7 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "LedgerLens"
+                              "symbol": "ScoreGate"
                             }
                           ]
                         },
@@ -2533,7 +2533,7 @@
                         "key": {
                           "vec": [
                             {
-                              "symbol": "LedgerLens"
+                              "symbol": "ScoreGate"
                             }
                           ]
                         },

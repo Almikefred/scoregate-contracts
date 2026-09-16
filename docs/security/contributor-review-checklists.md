@@ -1,6 +1,6 @@
-# LedgerLens Contributor Security Review Checklists
+# ScoreGate Contributor Security Review Checklists
 
-This document provides mandatory security review checklists organized by change category. Every Pull Request (PR) submitted to the `LedgerLens` smart contract suite must be audited against the applicable checklists before merging.
+This document provides mandatory security review checklists organized by change category. Every Pull Request (PR) submitted to the `ScoreGate` smart contract suite must be audited against the applicable checklists before merging.
 
 ---
 

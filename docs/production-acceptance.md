@@ -1,6 +1,6 @@
 # Production Acceptance and Readiness
 
-This document defines the release gate for activating LedgerLens contract
+This document defines the release gate for activating ScoreGate contract
 deployments in production. It is intentionally operational: every required
 claim must point to executable evidence, a named owner, and a stable report ID.
 
@@ -41,7 +41,7 @@ Tests and automation:
 - `cargo clippy --all-targets -- -D warnings`
 - `cargo test --workspace`
 - `cargo test -p replay`
-- `cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked`
+- `cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked`
 - `scripts/production-acceptance.sh`
 - `scripts/testnet-canary-rehearsal.sh --network <isolated-alias> ...`
 

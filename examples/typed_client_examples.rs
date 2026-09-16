@@ -1,8 +1,8 @@
-//! Typed client examples for the four canonical LedgerLens integration flows.
+//! Typed client examples for the four canonical ScoreGate integration flows.
 //!
 //! These examples are designed to be copy-pasted by downstream integrators.
 //! Each module covers one flow end-to-end using the generated
-//! `LedgerLensScoreContractClient` — no contract internals required.
+//! `ScoreGateScoreContractClient` — no contract internals required.
 //!
 //! ## Flows covered
 //!
@@ -15,7 +15,7 @@
 //!
 //! Build with:
 //! ```text
-//! cargo build --example typed_client_examples -p ledgerlens-score
+//! cargo build --example typed_client_examples -p scoregate-score
 //! ```
 
 #![allow(unused)]
@@ -30,19 +30,19 @@ extern crate std;
 /// This is the most basic integration: the off-chain detection pipeline writes
 /// a risk score and any caller reads it.
 pub mod score_flow {
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         symbol_short,
         testutils::{Address as _, Ledger as _},
         Address, Env, Vec,
     };
 
-    /// Helper: deploy + initialize LedgerLens, return (client, admin, service).
-    fn setup(env: &Env) -> (LedgerLensScoreContractClient<'_>, Address, Address) {
+    /// Helper: deploy + initialize ScoreGate, return (client, admin, service).
+    fn setup(env: &Env) -> (ScoreGateScoreContractClient<'_>, Address, Address) {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 1_700_000_000);
-        let id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &id);
+        let id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &id);
         let admin = Address::generate(env);
         let service = Address::generate(env);
         client.initialize(&admin, &service);
@@ -52,7 +52,7 @@ pub mod score_flow {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ledgerlens_score::Error;
+        use scoregate_score::Error;
 
         // ── Success path ──────────────────────────────────────────────────────
 
@@ -92,7 +92,7 @@ pub mod score_flow {
         /// entries were accepted and which were rejected (with rejection codes).
         #[test]
         fn batch_submit_scores() {
-            use ledgerlens_score::ScoreSubmission;
+            use scoregate_score::ScoreSubmission;
 
             let env = Env::default();
             let (client, _admin, _service) = setup(&env);
@@ -172,23 +172,23 @@ pub mod score_flow {
 
 // ── Gate flow ─────────────────────────────────────────────────────────────────
 
-/// Gate a swap (or any on-chain action) on a LedgerLens risk score.
+/// Gate a swap (or any on-chain action) on a ScoreGate risk score.
 ///
 /// `query_risk_gate` is **infallible** and **side-effect free** — use it
 /// directly inside a guard clause without a `try_*` wrapper.
 pub mod gate_flow {
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         symbol_short,
         testutils::{Address as _, Ledger as _},
         Address, Env, Vec,
     };
 
-    fn setup(env: &Env) -> LedgerLensScoreContractClient<'_> {
+    fn setup(env: &Env) -> ScoreGateScoreContractClient<'_> {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 1_700_000_000);
-        let id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &id);
+        let id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &id);
         let admin = Address::generate(env);
         let service = Address::generate(env);
         client.initialize(&admin, &service);
@@ -197,7 +197,7 @@ pub mod gate_flow {
 
     fn submit(
         env: &Env,
-        client: &LedgerLensScoreContractClient,
+        client: &ScoreGateScoreContractClient,
         wallet: &Address,
         score: u32,
         confidence: u32,
@@ -305,22 +305,22 @@ pub mod gate_flow {
 
 /// Read score history and manage the ring-buffer depth.
 ///
-/// LedgerLens keeps a rolling window of past scores per (wallet, asset_pair).
+/// ScoreGate keeps a rolling window of past scores per (wallet, asset_pair).
 /// The default depth is 10; the admin can change it (with a time-lock) to any
 /// value in [1, 50].
 pub mod history_flow {
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         symbol_short,
         testutils::{Address as _, Ledger as _},
         Address, Env, Vec,
     };
 
-    fn setup(env: &Env) -> (LedgerLensScoreContractClient<'_>, Address) {
+    fn setup(env: &Env) -> (ScoreGateScoreContractClient<'_>, Address) {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 1_700_000_000);
-        let id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &id);
+        let id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &id);
         let admin = Address::generate(env);
         let service = Address::generate(env);
         client.initialize(&admin, &service);
@@ -332,7 +332,7 @@ pub mod history_flow {
         env.ledger().with_mut(|l| l.timestamp += 3_601);
     }
 
-    fn submit(env: &Env, client: &LedgerLensScoreContractClient, wallet: &Address, score: u32) {
+    fn submit(env: &Env, client: &ScoreGateScoreContractClient, wallet: &Address, score: u32) {
         advance(env);
         client.submit_score(
             &Vec::new(env),
@@ -410,7 +410,7 @@ pub mod history_flow {
         /// InvalidHistoryDepth is returned for depth=0 or depth>50.
         #[test]
         fn set_history_max_depth_rejects_zero() {
-            use ledgerlens_score::Error;
+            use scoregate_score::Error;
 
             let env = Env::default();
             let (client, _admin) = setup(&env);
@@ -428,17 +428,17 @@ pub mod history_flow {
 /// Every upgrade is gated behind a mandatory delay (≥ 48 hours) so the
 /// community has time to inspect the new WASM hash and veto if needed.
 pub mod governance_flow {
-    use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+    use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
     use soroban_sdk::{
         testutils::{Address as _, Ledger as _},
         Address, BytesN, Env, Vec,
     };
 
-    fn setup(env: &Env) -> (LedgerLensScoreContractClient<'_>, Address) {
+    fn setup(env: &Env) -> (ScoreGateScoreContractClient<'_>, Address) {
         env.mock_all_auths();
         env.ledger().with_mut(|l| l.timestamp = 1_700_000_000);
-        let id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &id);
+        let id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &id);
         let admin = Address::generate(env);
         let service = Address::generate(env);
         client.initialize(&admin, &service);
@@ -452,7 +452,7 @@ pub mod governance_flow {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use ledgerlens_score::Error;
+        use scoregate_score::Error;
 
         /// Propose an upgrade, inspect the pending proposal, then veto it.
         /// Demonstrates the full governance flow without actually executing.

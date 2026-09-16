@@ -19,8 +19,8 @@ Each module or feature is classified into one of these categories:
 The `WasmBinaryAnalysis` structure breaks down binary size by:
 
 1. **Module attribution**: Size contribution from each contract module
-   - `ledgerlens_score`: Core scoring engine
-   - `ledgerlens_aggregator`: Shard aggregation logic
+   - `scoregate_score`: Core scoring engine
+   - `scoregate_aggregator`: Shard aggregation logic
    - Each module size is tracked as a percentage of total
 
 2. **Feature attribution**: Size contribution from feature flags
@@ -64,7 +64,7 @@ Improvements:
 
 ## Performance Benchmarks
 
-Typical binary sizes (ledgerlens-score):
+Typical binary sizes (scoregate-score):
 - **Unoptimized**: ~800KB
 - **Optimized (release)**: ~280KB
 - **Post-compression (gzip)**: ~90KB

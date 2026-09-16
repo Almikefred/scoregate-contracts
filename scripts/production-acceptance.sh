@@ -40,7 +40,7 @@ LOG_DIR="target/production-acceptance/$RUN_ID"
 mkdir -p "$LOG_DIR"
 
 REPORT_TMP="$LOG_DIR/report.md"
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
 STATUS=0
 
 for required in cargo sha256sum wc; do
@@ -95,7 +95,7 @@ run_step() {
   echo ""
   echo "Run ID: $RUN_ID"
   echo "Generated UTC: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-  echo "Repository: Ledger-Lenz/Ledgerlens-contract"
+  echo "Repository: Ledger-Lenz/scoregate-contract"
   echo "Commit: $(git rev-parse HEAD 2>/dev/null || echo unknown)"
   echo "Branch: $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo unknown)"
   echo "Operator: ${READY_SIGNER_NAME:-UNSIGNED}"
@@ -116,7 +116,7 @@ run_step "fmt" "Rust formatting is stable" cargo fmt --all -- --check
 run_step "clippy" "Strict linting has no warnings" cargo clippy --all-targets -- -D warnings
 run_step "workspace-tests" "Native workspace tests pass" cargo test --workspace
 run_step "replay" "Deterministic replay harness passes" cargo test -p replay
-run_step "wasm-release-build" "Locked release WASM builds" cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+run_step "wasm-release-build" "Locked release WASM builds" cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 
 if [[ -f "$WASM_PATH" ]]; then
   WASM_SIZE="$(wc -c < "$WASM_PATH" | tr -d ' ')"

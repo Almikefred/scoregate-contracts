@@ -1,15 +1,15 @@
 #[cfg(test)]
 mod tests {
-    use ledgerlens_score::{
-        LedgerLensScoreContract, LedgerLensScoreContractClient, ScoreSubmission,
+    use scoregate_score::{
+        ScoreGateScoreContract, ScoreGateScoreContractClient, ScoreSubmission,
     };
     use soroban_sdk::testutils::Address as _;
     use soroban_sdk::{Address, Env, Symbol, Vec as SVec};
 
-    fn init_contract(env: &Env) -> (LedgerLensScoreContractClient<'_>, Address, Address) {
+    fn init_contract(env: &Env) -> (ScoreGateScoreContractClient<'_>, Address, Address) {
         env.mock_all_auths();
-        let contract_id = env.register_contract(None, LedgerLensScoreContract);
-        let client = LedgerLensScoreContractClient::new(env, &contract_id);
+        let contract_id = env.register_contract(None, ScoreGateScoreContract);
+        let client = ScoreGateScoreContractClient::new(env, &contract_id);
         let admin = Address::generate(env);
         let service = Address::generate(env);
         client.initialize(&admin, &service);
@@ -173,7 +173,7 @@ mod tests {
         assert_eq!(result.rejected_count, 1);
         assert_eq!(
             result.results.get(0).unwrap().rejection_code,
-            ledgerlens_score::Error::InvalidScore as u32
+            scoregate_score::Error::InvalidScore as u32
         );
     }
 
@@ -202,7 +202,7 @@ mod tests {
         assert_eq!(result.rejected_count, 1);
         assert_eq!(
             result.results.get(0).unwrap().rejection_code,
-            ledgerlens_score::Error::InvalidTimestamp as u32
+            scoregate_score::Error::InvalidTimestamp as u32
         );
     }
 
@@ -249,7 +249,7 @@ mod tests {
         assert_eq!(result2.rejected_count, 1);
         assert_eq!(
             result2.results.get(0).unwrap().rejection_code,
-            ledgerlens_score::Error::RateLimitExceeded as u32
+            scoregate_score::Error::RateLimitExceeded as u32
         );
     }
 
@@ -280,7 +280,7 @@ mod tests {
         assert_eq!(result.rejected_count, 1);
         assert_eq!(
             result.results.get(0).unwrap().rejection_code,
-            ledgerlens_score::Error::ContractPaused as u32
+            scoregate_score::Error::ContractPaused as u32
         );
 
         client.set_pair_paused(&pair, &false);

@@ -5,7 +5,7 @@
 //!
 //! ```text
 //! cargo run -p schema-gen                # native spec source (default)
-//! cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+//! cargo run -p schema-gen -- --wasm target/wasm32-unknown-unknown/release/scoregate_score.wasm
 //! cargo run -p schema-gen -- --check     # exit non-zero if committed artifacts are stale
 //! ```
 
@@ -57,7 +57,7 @@ fn main() -> Result<()> {
         None => {
             let struct_ = native_risk_score_struct()?;
             (
-                "contracts/ledgerlens-score/src/types.rs (`RiskScore::spec_xdr()`)".to_string(),
+                "contracts/scoregate-score/src/types.rs (`RiskScore::spec_xdr()`)".to_string(),
                 struct_,
             )
         }

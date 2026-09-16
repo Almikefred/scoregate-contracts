@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to the LedgerLens smart contract will be documented in this file.
+All notable changes to the ScoreGate smart contract will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to Semantic Versioning.
 
@@ -16,16 +16,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
   4. model-version registry checks → `ModelVersionNotRegistered` / `ModelVersionNotReady` / `ModelVersionDeprecated`
 
   **ABI/compatibility notes:** No public function signatures, return types, error discriminants, storage layout, or emitted events were changed. `NormalizedSubmission` is not `#[contracttype]` and is therefore not part of the XDR-encoded ABI; it is purely an in-process transfer object. Callers built against any earlier ABI version do not need to regenerate bindings. The `validate_risk_score` helper used by `write_score_with_rate_limit` is preserved as a belt-and-suspenders guard. Closes #686.
-- **Memory-exhaustion tests for maximum-sized nested inputs**: `contracts/ledgerlens-score/src/test_memory_exhaustion.rs` exercises `submit_scores_batch_attested` at its maximum nested shape (`MAX_BATCH_SIZE` entries × `MAX_MERKLE_PROOF_DEPTH`-deep proofs each), asserting no panic and measuring worst-case CPU/memory cost, plus regression coverage for the new `signers`/`admin_signers` bound below and a bounded-read test for `get_expiring_entries`. Closes #612.
+- **Memory-exhaustion tests for maximum-sized nested inputs**: `contracts/scoregate-score/src/test_memory_exhaustion.rs` exercises `submit_scores_batch_attested` at its maximum nested shape (`MAX_BATCH_SIZE` entries × `MAX_MERKLE_PROOF_DEPTH`-deep proofs each), asserting no panic and measuring worst-case CPU/memory cost, plus regression coverage for the new `signers`/`admin_signers` bound below and a bounded-read test for `get_expiring_entries`. Closes #612.
 - **Interface versioning & migration policy**: [`docs/interface-versioning-policy.md`](docs/interface-versioning-policy.md) defines breaking vs. non-breaking changes, a 30-day notice period for breaking releases, and programmatic detection via `supports_interface`. Cross-referenced from `docs/interface-spec.md`, `CHANGELOG.md`, and `CONTRIBUTING.md`. Closes #418.
 - **`get_admin_set`**: Read-only query returning the current M-of-N admin co-signer set, mirroring `get_admin_signers`. Closes #239.
 - **Rustdoc examples**: Added runnable usage examples for `get_hysteresis_margin` (closes #229), `get_staleness_window` (closes #227), and `set_service_threshold` (closes #984).
 - **Rustdoc examples**: Added runnable usage examples for `get_service_signers` (closes #985), `get_service_signer_count` (closes #986), `set_signer_tier` (closes #987), and `get_last_service_activity` (closes #988).
 - **Parameter Change Governance**: Added `propose_parameter_change`, `execute_parameter_change`, and `veto_parameter_change` for time-locked admin parameter changes with service-signer veto during the first half of the delay window. Supports cooldown, history depth, decay rate, velocity cap, and upgrade delay parameters. See [`docs/governance.md`](docs/governance.md).
 - **Mock AMM liquidity gate**: `contracts/mock-amm` adds `provide_liquidity_gated`, `set_risk_oracle`, and confidence-aware gate configuration. See [`examples/amm_gate_example.rs`](examples/amm_gate_example.rs).
-- **Batch submit benchmarks**: Criterion suite in `contracts/ledgerlens-score/benches/batch_submit.rs` measuring throughput and Soroban budget cost at batch sizes 1, 10, 50, and 100. Results uploaded as CI artifacts on merge to `main`.
-- **Rent-sweep benchmarks**: Criterion suite in `contracts/ledgerlens-score/benches/rent_sweep.rs` measuring `get_expiring_entries` cost at tracked-entry-set sizes 0, 100, and 500. Closes #422.
-- **Batch-attested benchmarks**: Criterion suite in `contracts/ledgerlens-score/benches/batch_attested.rs` measuring `submit_scores_batch_attested` cost at the same batch sizes as `batch_submit.rs` (1, 10, 50, 100), for direct comparison against plain `submit_scores_batch`. Confirms the lazy score-TTL extension below already applies to the attested path unmodified (both batch entry points call the same `storage::set_score`), and that `verify_merkle_proof`'s per-entry cost scales with tree depth (`O(log batch size)`, capped at `MAX_MERKLE_PROOF_DEPTH` = 30), not batch size. Closes #419.
+- **Batch submit benchmarks**: Criterion suite in `contracts/scoregate-score/benches/batch_submit.rs` measuring throughput and Soroban budget cost at batch sizes 1, 10, 50, and 100. Results uploaded as CI artifacts on merge to `main`.
+- **Rent-sweep benchmarks**: Criterion suite in `contracts/scoregate-score/benches/rent_sweep.rs` measuring `get_expiring_entries` cost at tracked-entry-set sizes 0, 100, and 500. Closes #422.
+- **Batch-attested benchmarks**: Criterion suite in `contracts/scoregate-score/benches/batch_attested.rs` measuring `submit_scores_batch_attested` cost at the same batch sizes as `batch_submit.rs` (1, 10, 50, 100), for direct comparison against plain `submit_scores_batch`. Confirms the lazy score-TTL extension below already applies to the attested path unmodified (both batch entry points call the same `storage::set_score`), and that `verify_merkle_proof`'s per-entry cost scales with tree depth (`O(log batch size)`, capped at `MAX_MERKLE_PROOF_DEPTH` = 30), not batch size. Closes #419.
 - **Operator alert acknowledgement records** (`#630`): Added `acknowledge_alert` (admin M-of-N auth) and `get_alert_acknowledgement` (unauthenticated read) to record operator acknowledgements for critical alerts on-chain. New public types `AlertType` (enum: `Momentum(Address, Symbol)`, `ServiceSilence`) and `AlertAckRecord` (struct: `operator`, `acknowledged_at`, `note_hash`) are exported from the crate root. Storage is O(1) per `AlertType` variant (keyed via `DataKeyD::AlertAcknowledgement`). Emits `alrt_ack` event on every successful acknowledgement. No existing storage layout, error discriminants, or public interfaces were changed.
 
 ### Changed
@@ -86,7 +86,7 @@ This version corresponds to on-chain `CONTRACT_VERSION = 2`. It introduces batch
 This version corresponds to on-chain `CONTRACT_VERSION = 1`.
 
 ### Added
-- Initial release of the LedgerLens Soroban smart contract registry.
+- Initial release of the ScoreGate Soroban smart contract registry.
 - Core functions:
   - `initialize`
   - `get_version`

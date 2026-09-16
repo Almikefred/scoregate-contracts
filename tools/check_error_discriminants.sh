@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Fails if the head ref renames, removes, or renumbers any existing variant
-# in contracts/ledgerlens-score/src/errors.rs's `Error` enum relative to the
+# in contracts/scoregate-score/src/errors.rs's `Error` enum relative to the
 # base ref. New discriminants and new `pub const` aliases (in `impl Error`)
 # are always allowed — see CONTRIBUTING.md's "Keep error codes in errors.rs
 # stable" rule and issue #436.
@@ -8,7 +8,7 @@
 # Usage: check_error_discriminants.sh <base-ref> <head-ref>
 set -euo pipefail
 
-ERRORS_PATH="contracts/ledgerlens-score/src/errors.rs"
+ERRORS_PATH="contracts/scoregate-score/src/errors.rs"
 BASE_REF="${1:?usage: check_error_discriminants.sh <base-ref> <head-ref>}"
 HEAD_REF="${2:?usage: check_error_discriminants.sh <base-ref> <head-ref>}"
 

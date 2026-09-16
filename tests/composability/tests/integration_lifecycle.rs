@@ -9,7 +9,7 @@
 //! Each step asserts both return values and storage state. Ledger time is
 //! advanced explicitly via env.ledger().set_timestamp().
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, Ledger as _},
@@ -18,7 +18,7 @@ use soroban_sdk::{
 
 struct Lifecycle<'a> {
     env: Env,
-    client: LedgerLensScoreContractClient<'a>,
+    client: ScoreGateScoreContractClient<'a>,
     admin: Address,
     service: Address,
     signer_a: Address,
@@ -33,8 +33,8 @@ fn setup<'a>() -> Lifecycle<'a> {
     env.mock_all_auths();
     env.budget().reset_unlimited();
 
-    let contract_id = env.register_contract(None, LedgerLensScoreContract);
-    let client = LedgerLensScoreContractClient::new(&env, &contract_id);
+    let contract_id = env.register_contract(None, ScoreGateScoreContract);
+    let client = ScoreGateScoreContractClient::new(&env, &contract_id);
 
     let admin = Address::generate(&env);
     let service = Address::generate(&env);

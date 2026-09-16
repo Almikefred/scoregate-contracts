@@ -1,6 +1,6 @@
 //! Adversarial consumer tests for reentrant query assumptions (issue #719).
 //!
-//! Verifies that malicious or misbehaving consumers cannot turn LedgerLens's
+//! Verifies that malicious or misbehaving consumers cannot turn ScoreGate's
 //! safe, read-only endpoints into state mutation, authorization bypass, or
 //! resource exhaustion paths.
 //!
@@ -30,11 +30,11 @@
 //!    secondary (failover path) does not expose a re-entrant state window that
 //!    a malicious contract could exploit.
 //!
-//! LedgerLens's gate functions are documented as infallible and side-effect
+//! ScoreGate's gate functions are documented as infallible and side-effect
 //! free (`docs/interface-spec.md` §1.1–§1.2).  These tests prove that
 //! property holds under adversarial access patterns.
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use soroban_sdk::{
     symbol_short,
     testutils::{Address as _, Ledger as _},
@@ -43,9 +43,9 @@ use soroban_sdk::{
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-fn deploy_ledgerlens(env: &Env) -> (LedgerLensScoreContractClient, Address) {
-    let id = env.register_contract(None, LedgerLensScoreContract);
-    let client = LedgerLensScoreContractClient::new(env, &id);
+fn deploy_scoregate(env: &Env) -> (ScoreGateScoreContractClient, Address) {
+    let id = env.register_contract(None, ScoreGateScoreContract);
+    let client = ScoreGateScoreContractClient::new(env, &id);
     let admin = Address::generate(env);
     let service = Address::generate(env);
     client.initialize(&admin, &service);
@@ -54,13 +54,13 @@ fn deploy_ledgerlens(env: &Env) -> (LedgerLensScoreContractClient, Address) {
 
 fn submit_score(
     env: &Env,
-    ledgerlens: &LedgerLensScoreContractClient,
+    scoregate: &ScoreGateScoreContractClient,
     wallet: &Address,
     score: u32,
     confidence: u32,
 ) {
     env.ledger().with_mut(|l| l.timestamp += 3_601);
-    ledgerlens.submit_score(
+    scoregate.submit_score(
         &Vec::new(env),
         wallet,
         &symbol_short!("XLM_USDC"),
@@ -82,14 +82,14 @@ fn repeated_query_risk_gate_calls_return_identical_results() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
     let wallet = Address::generate(&env);
-    submit_score(&env, &ledgerlens, &wallet, 10, 90);
+    submit_score(&env, &scoregate, &wallet, 10, 90);
 
     // A malicious consumer issues the same gate query 20 times.
-    let first = ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
+    let first = scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
     for _ in 0..19 {
-        let result = ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
+        let result = scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
         assert_eq!(
             result, first,
             "query_risk_gate must be idempotent: repeated calls must return the same result"
@@ -105,14 +105,14 @@ fn repeated_query_risk_gate_with_confidence_calls_are_idempotent() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
     let wallet = Address::generate(&env);
-    submit_score(&env, &ledgerlens, &wallet, 10, 90);
+    submit_score(&env, &scoregate, &wallet, 10, 90);
 
     let first =
-        ledgerlens.query_risk_gate_with_confidence(&wallet, &symbol_short!("XLM_USDC"), &75, &50);
+        scoregate.query_risk_gate_with_confidence(&wallet, &symbol_short!("XLM_USDC"), &75, &50);
     for _ in 0..19 {
-        let result = ledgerlens.query_risk_gate_with_confidence(
+        let result = scoregate.query_risk_gate_with_confidence(
             &wallet,
             &symbol_short!("XLM_USDC"),
             &75,
@@ -131,16 +131,16 @@ fn querying_gate_does_not_alter_stored_risk_score() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
     let wallet = Address::generate(&env);
-    submit_score(&env, &ledgerlens, &wallet, 55, 80);
+    submit_score(&env, &scoregate, &wallet, 55, 80);
 
-    let score_before = ledgerlens.get_score(&wallet, &symbol_short!("XLM_USDC"));
+    let score_before = scoregate.get_score(&wallet, &symbol_short!("XLM_USDC"));
 
     // Issue a flurry of gate queries.
     for _ in 0..10 {
-        let _ = ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
-        let _ = ledgerlens.query_risk_gate_with_confidence(
+        let _ = scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75);
+        let _ = scoregate.query_risk_gate_with_confidence(
             &wallet,
             &symbol_short!("XLM_USDC"),
             &75,
@@ -148,7 +148,7 @@ fn querying_gate_does_not_alter_stored_risk_score() {
         );
     }
 
-    let score_after = ledgerlens.get_score(&wallet, &symbol_short!("XLM_USDC"));
+    let score_after = scoregate.get_score(&wallet, &symbol_short!("XLM_USDC"));
 
     assert_eq!(
         score_before.score, score_after.score,
@@ -172,27 +172,27 @@ fn query_risk_gate_returns_false_for_embargoed_wallet_regardless_of_raw_score() 
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
     let wallet = Address::generate(&env);
 
     // Score that would trivially pass the gate.
-    submit_score(&env, &ledgerlens, &wallet, 1, 99);
+    submit_score(&env, &scoregate, &wallet, 1, 99);
     assert!(
-        ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
+        scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
         "pre-embargo: gate should pass for low-risk wallet"
     );
 
     // Embargo the wallet.
-    ledgerlens.set_score_embargo(&wallet, &None);
-    assert!(ledgerlens.is_embargoed(&wallet));
+    scoregate.set_score_embargo(&wallet, &None);
+    assert!(scoregate.is_embargoed(&wallet));
 
     // Gate must return false regardless of the stored score value.
     assert!(
-        !ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
+        !scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
         "embargoed wallet must be blocked by query_risk_gate"
     );
     assert!(
-        !ledgerlens.query_risk_gate_with_confidence(
+        !scoregate.query_risk_gate_with_confidence(
             &wallet,
             &symbol_short!("XLM_USDC"),
             &75,
@@ -208,16 +208,16 @@ fn embargo_cannot_be_bypassed_by_querying_different_asset_pairs() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
     let wallet = Address::generate(&env);
 
-    submit_score(&env, &ledgerlens, &wallet, 1, 99);
-    ledgerlens.set_score_embargo(&wallet, &None);
+    submit_score(&env, &scoregate, &wallet, 1, 99);
+    scoregate.set_score_embargo(&wallet, &None);
 
     // Embargo is wallet-global; querying any asset pair must still return false.
     for pair in [symbol_short!("XLM_USDC"), symbol_short!("BTC_USD"), symbol_short!("ETH_XLM")] {
         assert!(
-            !ledgerlens.query_risk_gate(&wallet, &pair, &75),
+            !scoregate.query_risk_gate(&wallet, &pair, &75),
             "embargo bypass via different asset pair must not be possible"
         );
     }
@@ -231,17 +231,17 @@ fn query_risk_gate_returns_false_for_never_scored_wallet() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (ledgerlens, _) = deploy_ledgerlens(&env);
+    let (scoregate, _) = deploy_scoregate(&env);
 
     // Generate 10 wallets that have never been scored.
     for _ in 0..10 {
         let wallet = Address::generate(&env);
         assert!(
-            !ledgerlens.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
+            !scoregate.query_risk_gate(&wallet, &symbol_short!("XLM_USDC"), &75),
             "unscored wallet must fail closed"
         );
         assert!(
-            !ledgerlens.query_risk_gate_with_confidence(
+            !scoregate.query_risk_gate_with_confidence(
                 &wallet,
                 &symbol_short!("XLM_USDC"),
                 &75,
@@ -260,21 +260,21 @@ fn submit_score_without_authorization_is_rejected() {
     // Deliberately do NOT call env.mock_all_auths() — we want auth to be enforced.
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let id = env.register_contract(None, LedgerLensScoreContract);
-    let ledgerlens = LedgerLensScoreContractClient::new(&env, &id);
+    let id = env.register_contract(None, ScoreGateScoreContract);
+    let scoregate = ScoreGateScoreContractClient::new(&env, &id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
 
     // initialize is exempt from service-signer auth in the test fixture.
     env.mock_all_auths_allowing_non_root_auth();
-    ledgerlens.initialize(&admin, &service);
+    scoregate.initialize(&admin, &service);
     env.set_auths(&[]);
 
     let attacker_wallet = Address::generate(&env);
     env.ledger().with_mut(|l| l.timestamp += 3_601);
 
     // Try to submit a score with an empty signers list (no authorization).
-    let result = ledgerlens.try_submit_score(
+    let result = scoregate.try_submit_score(
         &Vec::new(&env), // no service signers
         &attacker_wallet,
         &symbol_short!("XLM_USDC"),
@@ -307,8 +307,8 @@ fn gate_result_from_failover_is_determined_by_score_value_only() {
     env.mock_all_auths();
     env.ledger().with_mut(|l| l.timestamp = 100_000);
 
-    let (primary, _primary_id) = deploy_ledgerlens(&env);
-    let (secondary, _secondary_id) = deploy_ledgerlens(&env);
+    let (primary, _primary_id) = deploy_scoregate(&env);
+    let (secondary, _secondary_id) = deploy_scoregate(&env);
     let secondary_id = secondary.address.clone();
 
     let wallet = Address::generate(&env);

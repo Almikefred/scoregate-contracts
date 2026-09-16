@@ -1,4 +1,4 @@
-# cargo-deny policy for LedgerLens.
+# cargo-deny policy for ScoreGate.
 #
 # This file codifies the dependency license and policy gate enforced in CI
 # (.github/workflows/ci.yml, job `dependency-license`). It is the
@@ -46,7 +46,7 @@ unmaintained = "all"
 
 # This section is used by `cargo deny check licenses`.
 [licenses]
-# LedgerLens is MIT. Its third-party dependency graph currently uses only
+# ScoreGate is MIT. Its third-party dependency graph currently uses only
 # permissive / weakly-permissive licenses — every entry below is SPDX-listed
 # and compatible with the project's MIT posture. Copyleft licenses (GPL, LGPL,
 # strong MPL, etc.) are intentionally NOT listed here, so introducing one
@@ -72,7 +72,7 @@ allow = [
 # genuinely ambiguous or unparsable licensing.
 confidence-threshold = 0.8
 
-# Workspace members (ledgerlens-score, ledgerlens-aggregator, mock-* , and the
+# Workspace members (scoregate-score, scoregate-aggregator, mock-* , and the
 # tooling/test crates) are licensed MIT but never published to crates.io, so
 # they carry no crates.io license metadata. Ignore license checks for these
 # unpublished workspace crates.

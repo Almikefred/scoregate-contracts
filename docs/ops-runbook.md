@@ -1,10 +1,10 @@
-# LedgerLens Operations Runbook
+# ScoreGate Operations Runbook
 
 > **Issue:** #635 — Production Launch & Operations Readiness Review
 
 ## 1. Overview
 
-This runbook covers the operational procedures for the LedgerLens score contract on each Stellar network (testnet, futurenet, mainnet). It includes routine operations, failure scenarios, diagnostic procedures, and recovery steps.
+This runbook covers the operational procedures for the ScoreGate score contract on each Stellar network (testnet, futurenet, mainnet). It includes routine operations, failure scenarios, diagnostic procedures, and recovery steps.
 
 ## 2. Routine Operations
 
@@ -12,7 +12,7 @@ This runbook covers the operational procedures for the LedgerLens score contract
 
 ```bash
 # 1. Build the release WASM
-cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 
 # 2. Run the canary deployment on testnet first
 ./scripts/canary-deploy.sh testnet <admin-identity> <service-address>

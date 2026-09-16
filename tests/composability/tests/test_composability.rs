@@ -4,12 +4,12 @@
 //! `docs/interface-spec.md` as the primary integration primitives for AMMs
 //! and lending protocols, but until now nothing actually deployed a second
 //! contract that calls them. These tests deploy `mock-amm` and
-//! `mock-lending` alongside `LedgerLensScoreContract` in the same Soroban
+//! `mock-lending` alongside `ScoreGateScoreContract` in the same Soroban
 //! test environment and exercise the real cross-contract call path —
 //! `client.swap(...)` / `client.borrow(...)` invoking the mocks, which in
-//! turn invoke LedgerLens — rather than calling the gate functions directly.
+//! turn invoke ScoreGate — rather than calling the gate functions directly.
 
-use ledgerlens_score::{LedgerLensScoreContract, LedgerLensScoreContractClient};
+use scoregate_score::{ScoreGateScoreContract, ScoreGateScoreContractClient};
 use mock_amm::{FailPolicy as AmmFailPolicy, MockAmm, MockAmmClient, MockAmmError};
 use mock_lending::{MockLending, MockLendingClient, MockLendingError};
 use soroban_sdk::{
@@ -24,27 +24,27 @@ const MIN_CONFIDENCE: u32 = 50;
 struct Fixture<'a> {
     env: Env,
     admin: Address,
-    ledgerlens: LedgerLensScoreContractClient<'a>,
+    scoregate: ScoreGateScoreContractClient<'a>,
     amm: MockAmmClient<'a>,
     lending: MockLendingClient<'a>,
 }
 
-/// Deploys LedgerLens plus both mock contracts in one shared `Env`, wires
+/// Deploys ScoreGate plus both mock contracts in one shared `Env`, wires
 /// each mock at the configured gate threshold / confidence floor, and
 /// returns ready-to-use clients.
 fn setup<'a>() -> Fixture<'a> {
     let env = Env::default();
     env.mock_all_auths();
 
-    let ledgerlens_id = env.register_contract(None, LedgerLensScoreContract);
-    let ledgerlens = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+    let scoregate_id = env.register_contract(None, ScoreGateScoreContract);
+    let scoregate = ScoreGateScoreContractClient::new(&env, &scoregate_id);
     let admin = Address::generate(&env);
     let service = Address::generate(&env);
-    ledgerlens.initialize(&admin, &service);
+    scoregate.initialize(&admin, &service);
 
     let amm_id = env.register_contract(None, MockAmm);
     let amm = MockAmmClient::new(&env, &amm_id);
-    amm.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD);
+    amm.initialize(&admin, &scoregate_id, &GATE_THRESHOLD);
     amm.set_liquidity_gate_config(
         &admin,
         &GATE_THRESHOLD,
@@ -56,16 +56,16 @@ fn setup<'a>() -> Fixture<'a> {
 
     let lending_id = env.register_contract(None, MockLending);
     let lending = MockLendingClient::new(&env, &lending_id);
-    lending.initialize(&admin, &ledgerlens_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
+    lending.initialize(&admin, &scoregate_id, &GATE_THRESHOLD, &MIN_CONFIDENCE);
 
-    Fixture { env, admin, ledgerlens, amm, lending }
+    Fixture { env, admin, scoregate, amm, lending }
 }
 
 /// Submits a score for `wallet`, advancing the ledger past the 1-hour
 /// cooldown first so repeated submissions in the same test never collide.
 fn submit_score(fixture: &Fixture, wallet: &Address, score: u32, confidence: u32) {
     fixture.env.ledger().with_mut(|l| l.timestamp += 3_601);
-    fixture.ledgerlens.submit_score(
+    fixture.scoregate.submit_score(
         &Vec::new(&fixture.env),
         wallet,
         &symbol_short!("XLM_USDC"),
@@ -86,9 +86,9 @@ fn submit_score_with_finality_buffer(
     confidence: u32,
     buffer_secs: u64,
 ) {
-    fixture.ledgerlens.set_finality_buffer(&Vec::new(&fixture.env), &buffer_secs);
+    fixture.scoregate.set_finality_buffer(&Vec::new(&fixture.env), &buffer_secs);
     fixture.env.ledger().with_mut(|l| l.timestamp += 3_601);
-    fixture.ledgerlens.submit_score(
+    fixture.scoregate.submit_score(
         &Vec::new(&fixture.env),
         wallet,
         &symbol_short!("XLM_USDC"),
@@ -105,12 +105,12 @@ fn submit_score_with_finality_buffer(
 // ── Acceptance criterion: both mock contracts compile and deploy ───────────
 
 #[test]
-fn both_mock_contracts_deploy_alongside_ledgerlens() {
+fn both_mock_contracts_deploy_alongside_scoregate() {
     // `setup()` deploying without panicking *is* the assertion: it proves
-    // mock-amm and mock-lending compile, link against ledgerlens-score, and
-    // register in the same Env as a real LedgerLens deployment.
+    // mock-amm and mock-lending compile, link against scoregate-score, and
+    // register in the same Env as a real ScoreGate deployment.
     let fixture = setup();
-    assert_eq!(fixture.ledgerlens.get_version(), 5);
+    assert_eq!(fixture.scoregate.get_version(), 5);
 }
 
 // ── Acceptance criterion: AMM swap rejected/accepted by risk score ─────────
@@ -156,7 +156,7 @@ fn amm_swap_rejected_while_safe_score_is_still_pending_finality() {
     );
 
     fixture.env.ledger().with_mut(|l| l.timestamp += 301);
-    fixture.ledgerlens.commit_pending_score(&wallet, &symbol_short!("XLM_USDC"));
+    fixture.scoregate.commit_pending_score(&wallet, &symbol_short!("XLM_USDC"));
     assert_eq!(fixture.amm.try_swap(&wallet, &symbol_short!("XLM_USDC"), &1_000), Ok(Ok(())));
 }
 
@@ -194,8 +194,8 @@ fn amm_provide_liquidity_blocked_for_low_confidence() {
 #[test]
 fn amm_provide_liquidity_uses_set_risk_oracle() {
     let fixture = setup();
-    let alt_oracle_id = fixture.env.register_contract(None, LedgerLensScoreContract);
-    let alt_oracle = LedgerLensScoreContractClient::new(&fixture.env, &alt_oracle_id);
+    let alt_oracle_id = fixture.env.register_contract(None, ScoreGateScoreContract);
+    let alt_oracle = ScoreGateScoreContractClient::new(&fixture.env, &alt_oracle_id);
     let admin = Address::generate(&fixture.env);
     let service = Address::generate(&fixture.env);
     alt_oracle.initialize(&admin, &service);
@@ -292,7 +292,7 @@ fn amm_swap_rejects_unsupported_oracle_version() {
         &MIN_CONFIDENCE,
         &AmmFailPolicy::FailClosed,
         &604_800,
-        &(fixture.ledgerlens.get_contract_version() + 1),
+        &(fixture.scoregate.get_contract_version() + 1),
     );
 
     assert_eq!(
@@ -364,7 +364,7 @@ fn lending_borrow_rejected_while_safe_score_is_still_pending_finality() {
     );
 
     fixture.env.ledger().with_mut(|l| l.timestamp += 301);
-    fixture.ledgerlens.commit_pending_score(&wallet, &symbol_short!("XLM_USDC"));
+    fixture.scoregate.commit_pending_score(&wallet, &symbol_short!("XLM_USDC"));
     assert_eq!(fixture.lending.try_borrow(&wallet, &symbol_short!("XLM_USDC"), &1_000), Ok(Ok(())));
 }
 
@@ -376,8 +376,8 @@ fn amm_swap_rejected_for_embargoed_wallet_with_otherwise_safe_score() {
     let wallet = Address::generate(&fixture.env);
     submit_score(&fixture, &wallet, 5, 99); // would otherwise easily pass
 
-    fixture.ledgerlens.set_score_embargo(&wallet, &None);
-    assert!(fixture.ledgerlens.is_embargoed(&wallet));
+    fixture.scoregate.set_score_embargo(&wallet, &None);
+    assert!(fixture.scoregate.is_embargoed(&wallet));
 
     let result = fixture.amm.try_swap(&wallet, &symbol_short!("XLM_USDC"), &1_000);
     assert_eq!(result, Err(Ok(MockAmmError::HighRiskWallet)));
@@ -389,7 +389,7 @@ fn lending_borrow_rejected_for_embargoed_wallet_with_otherwise_safe_score() {
     let wallet = Address::generate(&fixture.env);
     submit_score(&fixture, &wallet, 5, 99);
 
-    fixture.ledgerlens.set_score_embargo(&wallet, &None);
+    fixture.scoregate.set_score_embargo(&wallet, &None);
 
     let result = fixture.lending.try_borrow(&wallet, &symbol_short!("XLM_USDC"), &1_000);
     assert_eq!(result, Err(Ok(MockLendingError::RiskGateRejected)));
@@ -401,21 +401,21 @@ fn amm_swap_resumes_after_embargo_lifted() {
     let wallet = Address::generate(&fixture.env);
     submit_score(&fixture, &wallet, 5, 99);
 
-    fixture.ledgerlens.set_score_embargo(&wallet, &None);
+    fixture.scoregate.set_score_embargo(&wallet, &None);
     assert_eq!(
         fixture.amm.try_swap(&wallet, &symbol_short!("XLM_USDC"), &1_000),
         Err(Ok(MockAmmError::HighRiskWallet))
     );
 
-    fixture.ledgerlens.lift_score_embargo(&wallet);
+    fixture.scoregate.lift_score_embargo(&wallet);
     assert_eq!(fixture.amm.try_swap(&wallet, &symbol_short!("XLM_USDC"), &1_000), Ok(Ok(())));
 }
 
-// ── Mock-contract input validation (not LedgerLens-specific, but part of
+// ── Mock-contract input validation (not ScoreGate-specific, but part of
 //    proving the mocks are well-formed integrators) ─────────────────────────
 
 #[test]
-fn amm_swap_rejects_non_positive_amount_before_consulting_ledgerlens() {
+fn amm_swap_rejects_non_positive_amount_before_consulting_scoregate() {
     let fixture = setup();
     let wallet = Address::generate(&fixture.env);
     submit_score(&fixture, &wallet, 10, 90); // would pass the gate
@@ -425,7 +425,7 @@ fn amm_swap_rejects_non_positive_amount_before_consulting_ledgerlens() {
 }
 
 #[test]
-fn lending_borrow_rejects_non_positive_amount_before_consulting_ledgerlens() {
+fn lending_borrow_rejects_non_positive_amount_before_consulting_scoregate() {
     let fixture = setup();
     let wallet = Address::generate(&fixture.env);
     submit_score(&fixture, &wallet, 10, 90);
@@ -456,7 +456,7 @@ fn sandwich_simulation_fail_closed_blocks_consumers_before_first_score_and_after
     assert_eq!(fixture.lending.try_borrow(&wallet, &pair, &1_000), Ok(Ok(())));
 
     // If operators later clear the score, both consumers revert to fail-closed.
-    fixture.ledgerlens.clear_score(&Vec::new(&fixture.env), &wallet, &pair);
+    fixture.scoregate.clear_score(&Vec::new(&fixture.env), &wallet, &pair);
     assert_eq!(fixture.amm.try_swap(&wallet, &pair, &1_000), Err(Ok(MockAmmError::HighRiskWallet)));
     assert_eq!(
         fixture.lending.try_borrow(&wallet, &pair, &1_000),
@@ -478,7 +478,7 @@ fn sandwich_simulation_cooldown_prevents_immediate_score_flip_back() {
     // An immediate corrective/high-risk overwrite is blocked by cooldown, so
     // the exploitable window is bounded by the cooldown rather than allowing
     // intra-window oscillation.
-    let immediate_flip = fixture.ledgerlens.try_submit_score(
+    let immediate_flip = fixture.scoregate.try_submit_score(
         &Vec::new(&fixture.env),
         &wallet,
         &pair,
@@ -495,7 +495,7 @@ fn sandwich_simulation_cooldown_prevents_immediate_score_flip_back() {
     // Once the cooldown elapses, the updated risk score takes effect and
     // consumers query the stricter state on the next call.
     fixture.env.ledger().with_mut(|l| l.timestamp += 3_601);
-    fixture.ledgerlens.submit_score(
+    fixture.scoregate.submit_score(
         &Vec::new(&fixture.env),
         &wallet,
         &pair,

@@ -1,20 +1,20 @@
 #![no_std]
 
-//! Minimal mock AMM used to exercise LedgerLens's composability primitives
+//! Minimal mock AMM used to exercise ScoreGate's composability primitives
 //! (`docs/interface-spec.md` §1.1–§1.2) from a genuinely separate, independently
 //! deployed contract.
 //!
 //! This is **not** a real AMM — there are no reserves, no pricing curve, no
 //! transfers. It exists solely to prove that `swap` / `provide_liquidity_gated`
-//! can call LedgerLens gate functions and refuse risky wallets, mirroring the
+//! can call ScoreGate gate functions and refuse risky wallets, mirroring the
 //! patterns in `examples/amm_gate.rs` and `examples/amm_gate_example.rs`.
 //!
 //! The mock intentionally focuses on confidence-gated access control. Real
 //! integrations should layer their own max-age and pause-state checks on top
-//! of the LedgerLens gate so a stale-but-safe score cannot bypass a high-value
+//! of the ScoreGate gate so a stale-but-safe score cannot bypass a high-value
 //! action during detection lag.
 
-use ledgerlens_score::LedgerLensScoreContractClient;
+use scoregate_score::ScoreGateScoreContractClient;
 use soroban_sdk::{
     contract, contracterror, contractimpl, contracttype, symbol_short, Address, Env, Symbol,
 };
@@ -32,12 +32,12 @@ pub enum FailPolicy {
 pub enum MockAmmError {
     /// `initialize` / `set_risk_oracle` has not been called yet.
     NotConfigured = 1,
-    /// LedgerLens's gate returned `false` because the provider's risk score is
+    /// ScoreGate's gate returned `false` because the provider's risk score is
     /// at or above the configured threshold, or no score exists (fail closed).
     HighRiskWallet = 2,
     /// Liquidity amount must be positive.
     InvalidAmount = 3,
-    /// LedgerLens's gate returned `false` because the score's confidence is
+    /// ScoreGate's gate returned `false` because the score's confidence is
     /// below the configured minimum.
     LowConfidence = 4,
     /// The configured oracle call trapped or could not be decoded.
@@ -53,8 +53,8 @@ pub enum MockAmmError {
 #[contracttype]
 enum DataKey {
     Admin,
-    /// Contract ID of the LedgerLens score registry this AMM trusts.
-    LedgerLens,
+    /// Contract ID of the ScoreGate score registry this AMM trusts.
+    ScoreGate,
     /// Risk-gate threshold (0-100) this AMM enforces.
     GateThreshold,
     /// Minimum confidence (0-100) required of the score backing a gate decision.
@@ -70,26 +70,26 @@ pub struct MockAmm;
 
 #[contractimpl]
 impl MockAmm {
-    /// One-time wiring: record the LedgerLens deployment, admin, version
+    /// One-time wiring: record the ScoreGate deployment, admin, version
     /// expectation, bounded freshness window, and failure policy enforced by
     /// this SDK conformance fixture.
-    pub fn initialize(env: Env, admin: Address, ledgerlens: Address, gate_threshold: u32) {
+    pub fn initialize(env: Env, admin: Address, scoregate: Address, gate_threshold: u32) {
         admin.require_auth();
         env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::LedgerLens, &ledgerlens);
+        env.storage().instance().set(&DataKey::ScoreGate, &scoregate);
         env.storage().instance().set(&DataKey::GateThreshold, &gate_threshold);
         env.storage().instance().set(&DataKey::MinConfidence, &0u32);
         env.storage().instance().set(&DataKey::FailPolicy, &FailPolicy::FailClosed);
         env.storage().instance().set(&DataKey::MaxStalenessSecs, &604_800u64);
         env.storage().instance().set(&DataKey::RequiredOracleVersion, &0u32);
-        let expanded_score = Self::oracle_has_expanded_score(&env, &ledgerlens);
+        let expanded_score = Self::oracle_has_expanded_score(&env, &scoregate);
         env.storage().instance().set(&DataKey::ExpandedRiskScore, &expanded_score);
     }
 
-    /// Register or rotate the LedgerLens oracle this AMM consults for gate checks.
+    /// Register or rotate the ScoreGate oracle this AMM consults for gate checks.
     pub fn set_risk_oracle(env: Env, admin: Address, oracle: Address) -> Result<(), MockAmmError> {
         Self::require_admin(&env, &admin)?;
-        env.storage().instance().set(&DataKey::LedgerLens, &oracle);
+        env.storage().instance().set(&DataKey::ScoreGate, &oracle);
         let expanded_score = Self::oracle_has_expanded_score(&env, &oracle);
         env.storage().instance().set(&DataKey::ExpandedRiskScore, &expanded_score);
         Ok(())
@@ -126,10 +126,10 @@ impl MockAmm {
     }
 
     fn gate_config(env: &Env) -> Result<(Address, u32, u32, FailPolicy, u64, u32), MockAmmError> {
-        let ledgerlens: Address = env
+        let scoregate: Address = env
             .storage()
             .instance()
-            .get(&DataKey::LedgerLens)
+            .get(&DataKey::ScoreGate)
             .ok_or(MockAmmError::NotConfigured)?;
         let gate_threshold: u32 = env
             .storage()
@@ -145,7 +145,7 @@ impl MockAmm {
         let required_oracle_version: u32 =
             env.storage().instance().get(&DataKey::RequiredOracleVersion).unwrap_or(0);
         Ok((
-            ledgerlens,
+            scoregate,
             gate_threshold,
             min_confidence,
             fail_policy,
@@ -162,12 +162,12 @@ impl MockAmm {
     }
 
     fn oracle_has_expanded_score(env: &Env, oracle: &Address) -> bool {
-        let client = LedgerLensScoreContractClient::new(env, oracle);
+        let client = ScoreGateScoreContractClient::new(env, oracle);
         matches!(client.try_get_version(), Ok(Ok(version)) if version >= 5)
     }
 
     /// Attempt a swap for `user` on `asset_pair`. Rejected with
-    /// `HighRiskWallet` whenever LedgerLens's `query_risk_gate` says the
+    /// `HighRiskWallet` whenever ScoreGate's `query_risk_gate` says the
     /// wallet is not safe — note there is no `try_query_risk_gate` and no
     /// `?`, since the gate is infallible by design. Callers that need
     /// freshness guarantees must add their own max-age bound before invoking
@@ -182,10 +182,10 @@ impl MockAmm {
             return Err(MockAmmError::InvalidAmount);
         }
 
-        let (ledgerlens, gate_threshold, _, fail_policy, max_staleness_secs, required_version) =
+        let (scoregate, gate_threshold, _, fail_policy, max_staleness_secs, required_version) =
             Self::gate_config(&env)?;
 
-        let client = LedgerLensScoreContractClient::new(&env, &ledgerlens);
+        let client = ScoreGateScoreContractClient::new(&env, &scoregate);
         if required_version > 0 {
             match client.try_get_contract_version() {
                 Ok(Ok(version)) if version >= required_version => {}
@@ -219,7 +219,7 @@ impl MockAmm {
         Ok(())
     }
 
-    /// Provide liquidity for `provider`, gated by LedgerLens risk score and
+    /// Provide liquidity for `provider`, gated by ScoreGate risk score and
     /// confidence. The gate check runs **before** any state changes — no funds
     /// are moved until the provider clears the oracle. Real deployments should
     /// also cap score age and respect their own pause state before allowing a
@@ -238,7 +238,7 @@ impl MockAmm {
         }
 
         let (
-            ledgerlens,
+            scoregate,
             gate_threshold,
             min_confidence,
             fail_policy,
@@ -247,7 +247,7 @@ impl MockAmm {
         ) = Self::gate_config(&env)?;
         let asset_pair = symbol_short!("XLM_USDC");
 
-        let client = LedgerLensScoreContractClient::new(&env, &ledgerlens);
+        let client = ScoreGateScoreContractClient::new(&env, &scoregate);
         if required_version > 0 {
             match client.try_get_contract_version() {
                 Ok(Ok(version)) if version >= required_version => {}

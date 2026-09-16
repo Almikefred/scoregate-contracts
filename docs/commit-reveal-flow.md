@@ -2,7 +2,7 @@
 
 ## Overview
 
-LedgerLens employs a commit-reveal pattern to prevent MEV (maximum extractable value) attacks during multi-model consensus scoring. This pattern is used in the consensus submission flow where multiple independent models submit their risk assessments: during the commit phase, models publish commitments (cryptographic hashes) of their scores without revealing the actual values; only after all commitments are recorded on-chain does the reveal phase begin, where the actual scores are published and verified against their commitments. This two-phase structure prevents models from observing each other's submissions and adjusting their own to game the final consensus value.
+ScoreGate employs a commit-reveal pattern to prevent MEV (maximum extractable value) attacks during multi-model consensus scoring. This pattern is used in the consensus submission flow where multiple independent models submit their risk assessments: during the commit phase, models publish commitments (cryptographic hashes) of their scores without revealing the actual values; only after all commitments are recorded on-chain does the reveal phase begin, where the actual scores are published and verified against their commitments. This two-phase structure prevents models from observing each other's submissions and adjusting their own to game the final consensus value.
 
 ## Happy Path — Normal Consensus Flow
 
@@ -142,7 +142,7 @@ sequenceDiagram
 | `commit_consensus` | Consensus Phase 1 | Model | Submits a consensus score commitment (hashed) |
 | `reveal_consensus` | Consensus Phase 2 | Service Signers | Reveals scores, verifies commitments, tallies consensus |
 
-**Source:** [contracts/ledgerlens-score/src/lib.rs](../../contracts/ledgerlens-score/src/lib.rs)
+**Source:** [contracts/scoregate-score/src/lib.rs](../../contracts/scoregate-score/src/lib.rs)
 
 ## Commitment Scoping Trace & Isolation Analysis
 
@@ -189,7 +189,7 @@ sequenceDiagram
 ### Consensus Commit-Reveal
 
 - **Nonce Reuse**: Each nonce must be unique per model per (wallet, asset_pair) to prevent commitment collision attacks. The off-chain orchestrator must ensure nonces are drawn from a cryptographically random source and never reused.
-- **Commitment Hash Format**: The hash must be computed as `sha256(score || nonce || model_id || wallet || asset_pair || contract_id)` to bind it to a specific proposal context. The exact byte-ordering is defined in `contracts/ledgerlens-score/src/verkle.rs`.
+- **Commitment Hash Format**: The hash must be computed as `sha256(score || nonce || model_id || wallet || asset_pair || contract_id)` to bind it to a specific proposal context. The exact byte-ordering is defined in `contracts/scoregate-score/src/verkle.rs`.
 - **Finality Window**: Even within consensus, a finality window (determined by network confirmation time) must pass between the commit and reveal phases. This prevents models from observing each other's commitments on-chain and adjusting their reveals.
 - **Median Stability**: The consensus implementation uses integer division for the median to ensure deterministic results across different ledger environments.
 

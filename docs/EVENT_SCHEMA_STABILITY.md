@@ -1,6 +1,6 @@
 # Event Schema Stability Levels
 
-This document defines the compatibility guarantees for each event topic emitted by the LedgerLens Scoring Contract.
+This document defines the compatibility guarantees for each event topic emitted by the ScoreGate Scoring Contract.
 
 ## Overview
 
@@ -141,7 +141,7 @@ All events are tested to ensure:
 ### If you depend on Public API events:
 
 1. **Monitor schema versions** in event topics
-2. **Subscribe to upgrades** at https://github.com/Ledger-Lenz/Ledgerlens-contract/releases
+2. **Subscribe to upgrades** at https://github.com/Ledger-Lenz/scoregate-contract/releases
 3. **Implement version-aware parsers** that can handle multiple event schema versions during transition periods
 4. **Test against backwards compatibility** before deploying off-chain changes
 

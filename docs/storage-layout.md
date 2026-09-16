@@ -1,6 +1,6 @@
 # Storage Layout and Rent Mechanics
 
-This document provides a comprehensive specification of the on-chain storage structure, keys, storage tiers, Time-to-Live (TTL) settings, and rent mechanics utilized in the LedgerLens smart contract.
+This document provides a comprehensive specification of the on-chain storage structure, keys, storage tiers, Time-to-Live (TTL) settings, and rent mechanics utilized in the ScoreGate smart contract.
 
 ---
 
@@ -29,7 +29,7 @@ To manage rent efficiently, Soroban offers three distinct storage tiers, each wi
 
 ## TTL Extension Triggers (Read vs. Write Paths)
 
-LedgerLens dynamically extends the TTL of active keys to prevent unexpected archiving or expiration. However, how and when these extensions are triggered is critical to gas consumption:
+ScoreGate dynamically extends the TTL of active keys to prevent unexpected archiving or expiration. However, how and when these extensions are triggered is critical to gas consumption:
 
 ### Write Paths
 When writing or updating a key (e.g., `set_score`), the contract always calls `extend_ttl(&key, threshold, extend_to)` immediately following the write. This resets the entry's lifetime on the ledger to the target maximum (`extend_to`) if its remaining lifetime falls below `threshold`.
@@ -40,7 +40,7 @@ When reading a key via standard getters (e.g., `get_score`), the contract checks
 ### "Peek" / Read-only Paths (Side-effect-free Queries)
 Soroban treats TTL extension as a **state-mutating write operation**. Consequently, any transaction invoking a function that extends a TTL cannot be run in a read-only context, and triggers state fees.
 
-To allow gas-free and infallible integrations from external smart contracts (e.g., AMM guards calling `query_risk_gate`), LedgerLens provides separate **peek** read paths (e.g., `peek_score`, `peek_risk_band_state`, `peek_is_embargoed`). These functions perform direct reads without calling `extend_ttl`. 
+To allow gas-free and infallible integrations from external smart contracts (e.g., AMM guards calling `query_risk_gate`), ScoreGate provides separate **peek** read paths (e.g., `peek_score`, `peek_risk_band_state`, `peek_is_embargoed`). These functions perform direct reads without calling `extend_ttl`. 
 > [!NOTE]
 > Integrating contracts should always call the `peek` versions or view methods that do not trigger TTL extensions to avoid adding unnecessary gas overhead and write footprint requirements to their query paths.
 
@@ -48,7 +48,7 @@ To allow gas-free and infallible integrations from external smart contracts (e.g
 
 ## Storage Layout Specifications
 
-The following tables specify every key stored by LedgerLens, mapped to its storage tier, TTL parameters, and purpose.
+The following tables specify every key stored by ScoreGate, mapped to its storage tier, TTL parameters, and purpose.
 
 ### Instance Storage Keys
 *Instance storage keys do not have independent TTL properties; they inherit the contract instance's TTL.*
@@ -56,58 +56,58 @@ The following tables specify every key stored by LedgerLens, mapped to its stora
 | Key Name | Storage Tier | TTL Threshold | TTL Extend-To | Description | Cross-Reference |
 | :--- | :--- | :---: | :---: | :--- | :--- |
 | `Admin` | Instance | N/A | N/A | The contract administrator address. | - |
-| `AdminSet` | Instance | N/A | N/A | The list of multi-sig admin co-signers. | [`MAX_ADMIN_SIGNERS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L92) |
+| `AdminSet` | Instance | N/A | N/A | The list of multi-sig admin co-signers. | [`MAX_ADMIN_SIGNERS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L92) |
 | `AdminThreshold` | Instance | N/A | N/A | The required number of co-signatures for administrative commands. | - |
 | `Service` | Instance | N/A | N/A | The address of the primary off-chain scoring service (single-signer path). | - |
-| `ServiceSet` | Instance | N/A | N/A | The set of addresses authorized to co-sign score submissions. | [`MAX_SERVICE_SIGNERS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L89) |
+| `ServiceSet` | Instance | N/A | N/A | The set of addresses authorized to co-sign score submissions. | [`MAX_SERVICE_SIGNERS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L89) |
 | `ServiceThreshold` | Instance | N/A | N/A | The required signature count for M-of-N consensus. | - |
 | `ServicePubKey` | Instance | N/A | N/A | The off-chain pipeline's secp256k1 public key used to verify ECDSA signatures. | - |
 | `SignerTier(Address)` | Instance | N/A | N/A | The authorized score range limits (`TierBounds`) for service signers. Defaults to `[0, 100]` if unset. | - |
 | `Paused` | Instance | N/A | N/A | Global boolean pause switch. | - |
 | `PendingAdmin` | Instance | N/A | N/A | Pending new admin address during administrative handovers. | - |
-| `RiskThreshold` | Instance | N/A | N/A | Global threshold above which scores trigger breach events. | [`DEFAULT_RISK_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L16) |
+| `RiskThreshold` | Instance | N/A | N/A | Global threshold above which scores trigger breach events. | [`DEFAULT_RISK_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L16) |
 | `JumpThreshold` | Instance | N/A | N/A | Absolute delta limit between consecutive scores that triggers anomaly events. | `DEFAULT_JUMP_THRESHOLD` |
-| `HistoryMaxDepth` | Instance | N/A | N/A | Depth of the `ScoreHistory` ring buffer. | [`DEFAULT_HISTORY_MAX_DEPTH`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L10), [`MAX_HISTORY_DEPTH`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L7) |
-| `ContractVersion` | Instance | N/A | N/A | Semantic contract version. | [`CONTRACT_VERSION`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L29) |
+| `HistoryMaxDepth` | Instance | N/A | N/A | Depth of the `ScoreHistory` ring buffer. | [`DEFAULT_HISTORY_MAX_DEPTH`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L10), [`MAX_HISTORY_DEPTH`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L7) |
+| `ContractVersion` | Instance | N/A | N/A | Semantic contract version. | [`CONTRACT_VERSION`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L29) |
 | `PendingUpgrade` | Instance | N/A | N/A | Current locked-in `UpgradeProposal` for contract WASM upgrades. | - |
-| `UpgradeDelay` | Instance | N/A | N/A | Delay in seconds between proposal and execution of WASM upgrades. | [`DEFAULT_UPGRADE_DELAY_SECS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L86) |
-| `StalenessWindow` | Instance | N/A | N/A | Maximum age in seconds before a score is considered stale. | [`DEFAULT_STALENESS_WINDOW_SECS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L95) |
-| `CooldownSecs` | Instance | N/A | N/A | Rate limit cooldown delay between submissions for the same key. | [`DEFAULT_COOLDOWN_SECS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L57) |
-| `DecayRateNumerator` | Instance | N/A | N/A | Fixed-point exponential decay numerator λ. Defaults to 0. | [`DEFAULT_DECAY_LAMBDA_NUM`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L113) |
-| `DecayRateDenominator` | Instance | N/A | N/A | Fixed-point exponential decay denominator λ. Defaults to 1. | [`DEFAULT_DECAY_LAMBDA_DEN`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L116) |
+| `UpgradeDelay` | Instance | N/A | N/A | Delay in seconds between proposal and execution of WASM upgrades. | [`DEFAULT_UPGRADE_DELAY_SECS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L86) |
+| `StalenessWindow` | Instance | N/A | N/A | Maximum age in seconds before a score is considered stale. | [`DEFAULT_STALENESS_WINDOW_SECS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L95) |
+| `CooldownSecs` | Instance | N/A | N/A | Rate limit cooldown delay between submissions for the same key. | [`DEFAULT_COOLDOWN_SECS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L57) |
+| `DecayRateNumerator` | Instance | N/A | N/A | Fixed-point exponential decay numerator λ. Defaults to 0. | [`DEFAULT_DECAY_LAMBDA_NUM`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L113) |
+| `DecayRateDenominator` | Instance | N/A | N/A | Fixed-point exponential decay denominator λ. Defaults to 1. | [`DEFAULT_DECAY_LAMBDA_DEN`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L116) |
 | `GlobalMinConfidence` | Instance | N/A | N/A | System-wide minimum confidence floor. Defaults to 0. | - |
 | `FeeToken` | Instance | N/A | N/A | SEP-41 token contract address from which fees are drawn. | - |
 | `WithdrawalLock` | Instance | N/A | N/A | Reentrancy guard for withdrawal routines. | - |
-| `ScoreFloorHighWaterMark` | Instance | N/A | N/A | Peak score threshold for reputation laundering protection. | [`DEFAULT_SCORE_FLOOR_HWM`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L143) |
-| `ScoreFloorMinValue` | Instance | N/A | N/A | Minimum score allowed once the floor applies. | [`DEFAULT_SCORE_FLOOR_MIN`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L147) |
+| `ScoreFloorHighWaterMark` | Instance | N/A | N/A | Peak score threshold for reputation laundering protection. | [`DEFAULT_SCORE_FLOOR_HWM`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L143) |
+| `ScoreFloorMinValue` | Instance | N/A | N/A | Minimum score allowed once the floor applies. | [`DEFAULT_SCORE_FLOOR_MIN`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L147) |
 | `ScoreFloorEnabled` | Instance | N/A | N/A | Global activation state of the score floor policy. Defaults to false. | - |
-| `HysteresisMargin` | Instance | N/A | N/A | Margin used to widen the exit threshold below the risk threshold. Defaults to 0. | [`MAX_HYSTERESIS_MARGIN`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L167) |
-| `ConsensusThresholdK` | Instance | N/A | N/A | Minimum model submissions that must agree for consensus. | [`DEFAULT_CONSENSUS_THRESHOLD_K`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L194) |
-| `ConsensusEpsilon` | Instance | N/A | N/A | Maximum absolute deviation from the provisional median allowed. | [`DEFAULT_CONSENSUS_EPSILON`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L197) |
+| `HysteresisMargin` | Instance | N/A | N/A | Margin used to widen the exit threshold below the risk threshold. Defaults to 0. | [`MAX_HYSTERESIS_MARGIN`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L167) |
+| `ConsensusThresholdK` | Instance | N/A | N/A | Minimum model submissions that must agree for consensus. | [`DEFAULT_CONSENSUS_THRESHOLD_K`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L194) |
+| `ConsensusEpsilon` | Instance | N/A | N/A | Maximum absolute deviation from the provisional median allowed. | [`DEFAULT_CONSENSUS_EPSILON`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L197) |
 | `GateCallers` | Instance | N/A | N/A | List of contract addresses authorized to call gate functions. | - |
 
 ---
 
 ### Persistent Storage Keys
-*All persistent keys in LedgerLens share the same TTL bounds.*
+*All persistent keys in ScoreGate share the same TTL bounds.*
 * **TTL Threshold**: `SCORE_TTL_THRESHOLD` (~30 days / 518,400 ledgers)
 * **TTL Extend-To**: `SCORE_TTL_EXTEND_TO` (~45 days / 777,600 ledgers)
 
 | Key Name | Storage Tier | TTL Threshold | TTL Extend-To | Description | Cross-Reference |
 | :--- | :--- | :---: | :---: | :--- | :--- |
-| `Score(Address, Symbol)` | Persistent | 518,400 | 777,600 | Holds the latest `RiskScore` struct for a (wallet, asset_pair). | [`SCORE_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L2), [`SCORE_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L3) |
+| `Score(Address, Symbol)` | Persistent | 518,400 | 777,600 | Holds the latest `RiskScore` struct for a (wallet, asset_pair). | [`SCORE_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L2), [`SCORE_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L3) |
 | `Watchlist(Address)` | Persistent | 518,400 | 777,600 | Watchlist monitoring flag (`bool`). Removed when unset. | - |
 | `ScoreHistory(Address, Symbol)` | Persistent | 518,400 | 777,600 | Ring buffer (`Vec<RiskScore>`) of historical scores. | - |
-| `AssetPairs(Address)` | Persistent | 518,400 | 777,600 | List of asset pairs (`Vec<Symbol>`) a wallet is tracked on. | [`MAX_WALLET_PAIRS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L45) |
+| `AssetPairs(Address)` | Persistent | 518,400 | 777,600 | List of asset pairs (`Vec<Symbol>`) a wallet is tracked on. | [`MAX_WALLET_PAIRS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L45) |
 | `PairWeight(Symbol)` | Persistent | 518,400 | 777,600 | Weighted multiplier used in weighted average aggregates. | - |
 | `AggregateScore(Address)` | Persistent | 518,400 | 777,600 | Cached snapshot of `AggregateRiskScore` (write-through only). | - |
 | `LastSubmitTime(Address, Symbol)` | Persistent | 518,400 | 777,600 | Timestamp of the last accepted submission (cooldown logic). | - |
 | `ScoreCount(Address, Symbol)` | Persistent | 518,400 | 777,600 | Cumulative counter of all historical submissions. | - |
 | `PairPaused(Symbol)` | Persistent | 518,400 | 777,600 | Boolean paused flag per asset pair. Removed when unpaused. | - |
-| `PausedPairIndex` | Persistent | 518,400 | 777,600 | Incrementally maintained list (`Vec<Symbol>`) of paused pairs. | [`MAX_PAUSED_PAIRS`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L103) |
+| `PausedPairIndex` | Persistent | 518,400 | 777,600 | Incrementally maintained list (`Vec<Symbol>`) of paused pairs. | [`MAX_PAUSED_PAIRS`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L103) |
 | `ScoreDelegate(Address)` | Persistent | 518,400 | 777,600 | Maps a sub-wallet to its custodian wallet. | - |
 | `TrendState(Address, Symbol)` | Persistent | 518,400 | 777,600 | Risk trend metadata (`ScoreTrend`). | - |
-| `Counterparties(Address, Symbol)` | Persistent | 518,400 | 777,600 | Bidirectional links list (`Vec<Address>`) for wallet graphing. | [`MAX_COUNTERPARTY_LINKS_PER_WALLET`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L130) |
+| `Counterparties(Address, Symbol)` | Persistent | 518,400 | 777,600 | Bidirectional links list (`Vec<Address>`) for wallet graphing. | [`MAX_COUNTERPARTY_LINKS_PER_WALLET`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L130) |
 | `HistoricalMaxScore(Address, Symbol)` | Persistent | 518,400 | 777,600 | Running historical peak score. Used for floor checks. | - |
 
 ---
@@ -117,12 +117,12 @@ The following tables specify every key stored by LedgerLens, mapped to its stora
 
 | Key Name | Storage Tier | TTL Threshold | TTL Extend-To | Description | Cross-Reference |
 | :--- | :--- | :---: | :---: | :--- | :--- |
-| `RiskBandState(Address, Symbol)` | Temporary | 518,400 | 777,600 | Records if a wallet is in the high-risk band for an asset pair. | [`BAND_STATE_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L171), [`BAND_STATE_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L175) |
-| `ScoreEmbargo(Address)` | Temporary | 1,555,200 | 3,110,400 | Regulatory embargo details (`EmbargoExpiry`). Expire threshold is ~90 days; target extend-to is ~180 days. | [`EMBARGO_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L186), [`EMBARGO_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/Ledgerlens-contract/contracts/ledgerlens-score/src/constants.rs#L189) |
+| `RiskBandState(Address, Symbol)` | Temporary | 518,400 | 777,600 | Records if a wallet is in the high-risk band for an asset pair. | [`BAND_STATE_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L171), [`BAND_STATE_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L175) |
+| `ScoreEmbargo(Address)` | Temporary | 1,555,200 | 3,110,400 | Regulatory embargo details (`EmbargoExpiry`). Expire threshold is ~90 days; target extend-to is ~180 days. | [`EMBARGO_TTL_THRESHOLD`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L186), [`EMBARGO_TTL_EXTEND_TO`](file:///c:/Users/HP/Desktop/opensource/scoregate-contract/contracts/scoregate-score/src/constants.rs#L189) |
 
 ---
 
-## Aggregator Storage Keys (ledgerlens-aggregator)
+## Aggregator Storage Keys (scoregate-aggregator)
 
 ### Instance Storage Keys
 
@@ -139,7 +139,7 @@ The following tables specify every key stored by LedgerLens, mapped to its stora
 ## Executable Storage Invariants (Issue #710)
 
 The following invariants are enforced at test/debug build time via
-`invariants::invariant_check(env)` in `contracts/ledgerlens-score/src/invariants.rs`.
+`invariants::invariant_check(env)` in `contracts/scoregate-score/src/invariants.rs`.
 Each is callable as a standalone helper for migration tooling.
 
 | # | Storage Family | Invariant | Helper |
@@ -166,7 +166,7 @@ Each is callable as a standalone helper for migration tooling.
 ## Migration Rollback Fixtures (Issue #709)
 
 Partial-migration scenarios are exercised in
-`contracts/ledgerlens-score/src/test_migration_rollback.rs`.
+`contracts/scoregate-score/src/test_migration_rollback.rs`.
 
 **Pattern:** Seed raw `Score` keys → apply partial index rewrite → re-run
 migration (idempotent replay) → assert `score_index_is_consistent()` and
@@ -190,7 +190,7 @@ migration (idempotent replay) → assert `score_index_is_consistent()` and
 
 **New storage key:** `ShardCapabilities(Address)` (see aggregator table above).
 
-**New public methods on `LedgerLensAggregator`:**
+**New public methods on `ScoreGateAggregator`:**
 - `get_shard_capabilities(shard: Address) → Vec<Symbol>` — returns the capability snapshot stored at registration time.
 - `shard_capabilities_downgraded(shard: Address) → bool` — returns `true` if the shard no longer advertises all capabilities it reported at registration.
 

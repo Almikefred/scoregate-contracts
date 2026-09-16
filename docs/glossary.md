@@ -133,7 +133,7 @@ conditions and which return `false`.
 
 ### Failover
 
-A secondary `ledgerlens-score` contract instance an admin can configure
+A secondary `scoregate-score` contract instance an admin can configure
 (`set_failover_contract`) that `query_risk_gate*` falls back to *only* while the primary is
 paused — and only if the secondary's score for that wallet/pair is fresher than
 `FAILOVER_STALENESS_WINDOW`. Not related to **shard** (§ below): a shard is a peer the aggregator
@@ -205,11 +205,11 @@ Soroban's ledger-space storage cost model — entries incur fees based on footpr
 duration. This contract's rent-management strategy (per-tier TTL thresholds, `peek_*` read paths
 that don't extend TTL, the tracked-entry sweep index) is fully specified in
 [`docs/storage-layout.md`](storage-layout.md); "rent" in this repo always refers to that Soroban
-mechanic, never to a LedgerLens-specific fee (see **Score gate fee**, distinct concept, below).
+mechanic, never to a ScoreGate-specific fee (see **Score gate fee**, distinct concept, below).
 
 ### Score (risk score)
 
-A `u32` in `[0, 100]` produced by the off-chain LedgerLens pipeline for one `(wallet, asset_pair)`
+A `u32` in `[0, 100]` produced by the off-chain ScoreGate pipeline for one `(wallet, asset_pair)`
 combination, where higher means more likely fraudulent/manipulated. Stored as part of a
 `RiskScore` struct alongside `benford_flag`, `ml_flag`, **confidence** (§ above), and `timestamp`.
 "Score" alone, without qualification, always means this per-pair value — see **Aggregate score**
@@ -219,7 +219,7 @@ and **Consensus** above for the two ways multiple scores get combined into somet
 
 An optional per-call fee (`set_gate_query_fee`, in fee-token stroops) charged on `query_risk_gate`
 invocations, tracked via `get_accumulated_fees` and withdrawn with `withdraw_fees`. `0` disables
-fee collection. Unrelated to Soroban **rent** (§ above) — this is a LedgerLens-level charge on
+fee collection. Unrelated to Soroban **rent** (§ above) — this is a ScoreGate-level charge on
 integrators, not a network storage cost.
 
 ### Service
@@ -230,8 +230,8 @@ above): the service can write scores but cannot change contract configuration.
 
 ### Shard
 
-**Not** blockchain state sharding. In `ledgerlens-aggregator`, a "shard" is simply another
-deployed `ledgerlens-score` contract instance registered via `add_shard` (bounded by
+**Not** blockchain state sharding. In `scoregate-aggregator`, a "shard" is simply another
+deployed `scoregate-score` contract instance registered via `add_shard` (bounded by
 `MAX_SHARDS`), which must advertise the required **capabilities** (`gate`, `score`, `aggr`) via
 `supports_interface` before it's accepted. The aggregator reads across all registered shards and
 applies a `ConflictPolicy` (`HighestScore`, `MostRecent`, ...) when they disagree — see
@@ -243,7 +243,7 @@ between separate contract deployments*, not a partition of one contract's own st
 
 An admin-maintained flag (`set_watchlist`) on individual wallets, independent of **score** and
 **embargo** (§ above) — a wallet can be watchlisted without ever having been scored or embargoed.
-`ledgerlens-aggregator`'s watchlist check is conservative: a wallet is reported as watchlisted if
+`scoregate-aggregator`'s watchlist check is conservative: a wallet is reported as watchlisted if
 *any* registered shard reports it as such.
 
 ---

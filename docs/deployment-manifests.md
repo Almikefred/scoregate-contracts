@@ -1,6 +1,6 @@
 # Deployment manifests and toolchain drift checks
 
-As of July 25, 2026, LedgerLens deploys through reviewed environment manifests
+As of July 25, 2026, ScoreGate deploys through reviewed environment manifests
 instead of relying on ad-hoc network flags and ambient CLI configuration.
 
 ## Current behavior before this change

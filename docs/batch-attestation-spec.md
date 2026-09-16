@@ -1,6 +1,6 @@
 # Batch Attestation — Merkle-Root Verification Spec
 
-**Status:** Stable · **Contract:** `LedgerLensScoreContract` · introduced in
+**Status:** Stable · **Contract:** `ScoreGateScoreContract` · introduced in
 `CONTRACT_VERSION` 3.
 
 `submit_scores_batch_attested` is the cryptographic-payload-integrity
@@ -349,7 +349,7 @@ function signRoot(root: Buffer, privateKey: crypto.KeyObject): Buffer {
 
 ## 9. Acceptance criteria
 
-Cross-references the issue ([#40](https://github.com/Ledger-Lenz/Ledgerlens-contract/issues/40)):
+Cross-references the issue ([#40](https://github.com/Ledger-Lenz/scoregate-contract/issues/40)):
 
 1. `submit_scores_batch_attested` is implemented with per-entry Merkle proof verification.
 2. `verify_merkle_proof` and `sha256_pair` (here called `hash_internal_node`)

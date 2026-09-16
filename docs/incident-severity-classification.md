@@ -1,10 +1,10 @@
 # Incident Severity Classification for Contract Events
 
-Maps `ledgerlens-score` emitted events and failed operations to incident
+Maps `scoregate-score` emitted events and failed operations to incident
 severity levels and escalation paths, so on-call has a deterministic answer
 to "how bad is this" instead of judgment calls under pressure.
 
-> **Source of truth for event names:** [`contracts/ledgerlens-score/src/events.rs`](../contracts/ledgerlens-score/src/events.rs)
+> **Source of truth for event names:** [`contracts/scoregate-score/src/events.rs`](../contracts/scoregate-score/src/events.rs)
 > **Source of truth for error names:** [`docs/errors.md`](errors.md)
 
 ## Severity levels
@@ -77,5 +77,5 @@ to "how bad is this" instead of judgment calls under pressure.
 ## Out of scope
 
 No GrantFox/campaign-specific severity labeling. Does not replace the
-LedgerLens risk model or off-chain scoring pipeline — this classifies
+ScoreGate risk model or off-chain scoring pipeline — this classifies
 **contract-emitted signals**, not off-chain model outputs.

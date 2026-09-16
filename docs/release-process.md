@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes the automated release workflow for the `ledgerlens-score` Soroban contract. The workflow ensures a verifiable chain of custody from source code to published release artifact.
+This document describes the automated release workflow for the `scoregate-score` Soroban contract. The workflow ensures a verifiable chain of custody from source code to published release artifact.
 
 ---
 
@@ -49,8 +49,8 @@ git push origin contract-v1.2.3
 ### What Happens Next
 
 1. GitHub Actions starts the **Contract Release** workflow
-2. You can monitor progress at: `https://github.com/Ledger-Lenz/Ledgerlens-contract/actions`
-3. On success, a GitHub Release appears at: `https://github.com/Ledger-Lenz/Ledgerlens-contract/releases`
+2. You can monitor progress at: `https://github.com/Ledger-Lenz/scoregate-contract/actions`
+3. On success, a GitHub Release appears at: `https://github.com/Ledger-Lenz/scoregate-contract/releases`
 
 ---
 
@@ -63,15 +63,15 @@ git push origin contract-v1.2.3
 | Checkout | Clones the repository at the tagged commit |
 | Pin Rust toolchain | Installs Rust 1.81.0 + `wasm32-unknown-unknown` target (matches `rust-toolchain.toml` and `ci.yml`) |
 | Install Stellar CLI | Downloads Stellar CLI v21.0.0 (matches `deploy/manifests/mainnet.env`) |
-| Build raw WASM | `cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked` |
+| Build raw WASM | `cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked` |
 | Optimize WASM | `stellar contract optimize --wasm <raw> --output <optimized>` |
-| Sign optimized WASM | Creates `ledgerlens_score.optimized.wasm.sha256` via `sha256sum` |
+| Sign optimized WASM | Creates `scoregate_score.optimized.wasm.sha256` via `sha256sum` |
 | Verify manifest | `sha256sum --check` — fails if hash mismatches |
 | Upload artifacts | Optimized WASM + SHA-256 manifest (90-day retention) |
 
 **Outputs:**
-- `ledgerlens_score.optimized.wasm` — deployable artifact
-- `ledgerlens_score.optimized.wasm.sha256` — integrity manifest
+- `scoregate_score.optimized.wasm` — deployable artifact
+- `scoregate_score.optimized.wasm.sha256` — integrity manifest
 
 ### Stage 2: Reproducibility Check (`reproducibility-check` job)
 
@@ -115,8 +115,8 @@ Every release includes:
 
 | File | Description |
 |------|-------------|
-| `ledgerlens_score.optimized.wasm` | Deployable WASM (output of `stellar contract optimize`) |
-| `ledgerlens_score.optimized.wasm.sha256` | Detached SHA-256 manifest for the optimized artifact |
+| `scoregate_score.optimized.wasm` | Deployable WASM (output of `stellar contract optimize`) |
+| `scoregate_score.optimized.wasm.sha256` | Detached SHA-256 manifest for the optimized artifact |
 
 The release body also includes the **raw WASM SHA-256** (verified by the double-build check) so deployers can verify the source-to-binary correspondence.
 
@@ -128,27 +128,27 @@ The release body also includes the **raw WASM SHA-256** (verified by the double-
 
 ```bash
 # 1. Download from the release page
-curl -LO https://github.com/Ledger-Lenz/Ledgerlens-contract/releases/download/contract-v1.2.3/ledgerlens_score.optimized.wasm
-curl -LO https://github.com/Ledger-Lenz/Ledgerlens-contract/releases/download/contract-v1.2.3/ledgerlens_score.optimized.wasm.sha256
+curl -LO https://github.com/Ledger-Lenz/scoregate-contract/releases/download/contract-v1.2.3/scoregate_score.optimized.wasm
+curl -LO https://github.com/Ledger-Lenz/scoregate-contract/releases/download/contract-v1.2.3/scoregate_score.optimized.wasm.sha256
 
 # 2. Verify SHA-256
-sha256sum --check ledgerlens_score.optimized.wasm.sha256
-# Should output: ledgerlens_score.optimized.wasm: OK
+sha256sum --check scoregate_score.optimized.wasm.sha256
+# Should output: scoregate_score.optimized.wasm: OK
 ```
 
 ### Verify Raw WASM Matches Source (Reproducibility)
 
 ```bash
 # 1. Check out the exact tag
-git clone https://github.com/Ledger-Lenz/Ledgerlens-contract.git
-cd Ledgerlens-contract
+git clone https://github.com/Ledger-Lenz/scoregate-contract.git
+cd scoregate-contract
 git checkout contract-v1.2.3
 
 # 2. Build with pinned toolchain (rust-toolchain.toml handles this)
-cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score --locked
+cargo build --target wasm32-unknown-unknown --release -p scoregate-score --locked
 
 # 3. Compute hash and compare with release body
-sha256sum target/wasm32-unknown-unknown/release/ledgerlens_score.wasm
+sha256sum target/wasm32-unknown-unknown/release/scoregate_score.wasm
 # Compare with "Raw WASM SHA-256" in the release body
 ```
 
@@ -210,7 +210,7 @@ The workflow includes a **commented placeholder** for Software Bill of Materials
 # - name: Generate SBOM (CycloneDX)
 #   run: |
 #     cargo install cargo-cyclonedx --locked
-#     cargo cyclonedx --target wasm32-unknown-unknown --release -p ledgerlens-score \
+#     cargo cyclonedx --target wasm32-unknown-unknown --release -p scoregate-score \
 #       --output-format json --output-file target/sbom.json
 #
 # - name: Upload SBOM to release
@@ -265,8 +265,8 @@ The workflow requests minimal permissions:
 | Action | Command |
 |--------|---------|
 | Create release | `git tag contract-vX.Y.Z && git push origin contract-vX.Y.Z` |
-| Monitor workflow | `https://github.com/Ledger-Lenz/Ledgerlens-contract/actions` |
-| View releases | `https://github.com/Ledger-Lenz/Ledgerlens-contract/releases` |
-| Verify artifact | `sha256sum --check ledgerlens_score.optimized.wasm.sha256` |
+| Monitor workflow | `https://github.com/Ledger-Lenz/scoregate-contract/actions` |
+| View releases | `https://github.com/Ledger-Lenz/scoregate-contract/releases` |
+| Verify artifact | `sha256sum --check scoregate_score.optimized.wasm.sha256` |
 | Local reproducibility check | See `docs/reproducible-builds.md` |
 | Delete bad tag | `git tag -d contract-vX.Y.Z && git push origin :refs/tags/contract-vX.Y.Z` |

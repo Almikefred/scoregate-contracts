@@ -1,8 +1,8 @@
-# `ILedgerLensScore` — Composability Interface Specification
+# `IScoreGateScore` — Composability Interface Specification
 
-**Status:** Stable · **Interface version:** 3 · **Contract:** `LedgerLensScoreContract`
+**Status:** Stable · **Interface version:** 3 · **Contract:** `ScoreGateScoreContract`
 
-LedgerLens turns off-chain fraud signals (Benford's-Law analysis + an ML
+ScoreGate turns off-chain fraud signals (Benford's-Law analysis + an ML
 ensemble) into an on-chain, 0–100 risk score per `(wallet, asset_pair)`. The
 point of putting it on-chain is **composability**: any Soroban protocol — an
 AMM, a lending market, a DEX aggregator — should be able to consult a risk
@@ -11,9 +11,9 @@ score inside its own logic without trusting an external oracle.
 This document is the canonical, versioned integration contract for those
 third-party callers. It defines the function signatures you may rely on, the
 exact data layout you decode against, the stability guarantees behind each, and
-the recommended ways to wire LedgerLens into your protocol.
+the recommended ways to wire ScoreGate into your protocol.
 
-> If you are integrating LedgerLens, **program against this document, not
+> If you are integrating ScoreGate, **program against this document, not
 > against the source.** Anything not listed here as stable may change between
 > releases.
 >
@@ -27,7 +27,7 @@ the recommended ways to wire LedgerLens into your protocol.
 ## 1. Canonical functions
 
 These are the functions external contracts are expected to call. Build the
-generated `LedgerLensScoreContractClient` against the deployed contract ID and
+generated `ScoreGateScoreContractClient` against the deployed contract ID and
 invoke them like any other cross-contract call.
 
 ### 1.1 `query_risk_gate` — the integration primitive
@@ -54,7 +54,7 @@ path:
 - **Never panics.** It cannot trap the calling transaction, so it cannot be
   used to grief your protocol's gas or disable your guard clause.
 - **Side-effect free.** It is a pure read and does not even extend storage
-  TTL — calling it does not mutate LedgerLens state.
+  TTL — calling it does not mutate ScoreGate state.
 - **Conservative on the unknown.** A wallet with no score returns `false`
   (treated as risky). See [§5](#5-security-considerations).
 
@@ -238,7 +238,7 @@ There are two independent version numbers:
 1. **Contract version** — `get_version()` (backed by `CONTRACT_VERSION`,
    currently `5`). Bumped on any breaking ABI change.
 2. **Interface version** — the number at the top of this document. It tracks
-   the `ILedgerLensScore` surface specifically.
+   the `IScoreGateScore` surface specifically.
 
 **How callers should detect compatibility:** prefer `supports_interface` over
 version comparison. Capability detection is forward-compatible — a newer
@@ -298,7 +298,7 @@ below are stable** — integrators may match on the numeric code:
   Unknown wallets are treated as *potentially risky*. If you instead want to
   allow-list unknown wallets, you must make that decision explicitly in your
   own contract; do not assume `query_risk_gate` will ever return `true` for a
-  wallet LedgerLens has never seen.
+  wallet ScoreGate has never seen.
 - **Low-confidence scores are epistemically equivalent to "unknown".** A score
   of `score=30, confidence=5` carries almost no information — the model had
   too little data to make any meaningful determination. Treating it as evidence
@@ -312,7 +312,7 @@ below are stable** — integrators may match on the numeric code:
   be enforced without requiring every integrating protocol to specify one.
 - **Freshness is separate from confidence.** A high-confidence score can still
   be stale if the off-chain pipeline has not published a replacement yet.
-  LedgerLens does not currently bake max-age into `query_risk_gate`, so
+  ScoreGate does not currently bake max-age into `query_risk_gate`, so
   consumers that care about detection lag must enforce their own freshness
   bound, re-check their own pause state, and fail closed when the score is too
   old or the oracle is silent.
@@ -322,7 +322,7 @@ below are stable** — integrators may match on the numeric code:
   gas, or mutate state to disable your guard.
 - **Decide your own threshold.** `gate_threshold` is a caller parameter, not a
   protocol constant. Higher-value actions warrant a lower (stricter) threshold.
-  LedgerLens's own default risk threshold is `75`; it is a reasonable starting
+  ScoreGate's own default risk threshold is `75`; it is a reasonable starting
   point, not a mandate.
 - **Capability removal is breaking.** Treat the capability set as append-only
   within a major version when designing long-lived integrations.
@@ -337,7 +337,7 @@ Call `query_risk_gate` inside your guard clause and refuse risky wallets. This
 is the pattern shown in [`examples/amm_gate.rs`](../examples/amm_gate.rs):
 
 ```rust
-let client = LedgerLensScoreContractClient::new(&env, &llens_id);
+let client = ScoreGateScoreContractClient::new(&env, &llens_id);
 if !client.query_risk_gate(&user, &symbol_short!("XLM_USDC"), &75) {
     return Err(MyError::HighRiskWallet);
 }
@@ -382,7 +382,7 @@ with `query_risk_gate_with_confidence` — stricter than the swap path, which us
 score-only `query_risk_gate`. The gate runs **before** any pool state changes:
 
 ```rust
-let client = LedgerLensScoreContractClient::new(&env, &ledgerlens_id);
+let client = ScoreGateScoreContractClient::new(&env, &scoregate_id);
 let is_safe = client.query_risk_gate_with_confidence(
     &provider,
     &symbol_short!("XLM_USDC"),
@@ -395,7 +395,7 @@ if !is_safe {
 // ... proceed with liquidity mint / reserve update ...
 ```yaml
 
-**No-score policy:** when LedgerLens has no score for the provider,
+**No-score policy:** when ScoreGate has no score for the provider,
 `query_risk_gate_with_confidence` returns `false` (fail closed). Liquidity is
 rejected — the same conservative default as swap gating.
 
@@ -409,8 +409,8 @@ Reference implementations:
 
 ## 7. Aggregator compatibility contract
 
-`ledgerlens-aggregator` is a federating caller of this interface: it fans a
-single query out across a set of registered `ledgerlens-score` shards and
+`scoregate-aggregator` is a federating caller of this interface: it fans a
+single query out across a set of registered `scoregate-score` shards and
 combines the results. Because the two contracts are separate deployable units
 that evolve independently, a shard whose interface has drifted from what the
 aggregator expects would otherwise be registrable, producing failed or subtly
@@ -456,15 +456,15 @@ reject the shard.
 
 ### 7.3 Reference
 
-- Enforcement + tests: `contracts/ledgerlens-aggregator/src/lib.rs`,
-  `contracts/ledgerlens-aggregator/src/test.rs`
+- Enforcement + tests: `contracts/scoregate-aggregator/src/lib.rs`,
+  `contracts/scoregate-aggregator/src/test.rs`
 
 ---
 
 ## 8. Reference material
 
 - Reference integration: [`examples/amm_gate.rs`](../examples/amm_gate.rs)
-- Interface stability tests: `contracts/ledgerlens-score/src/test_interface.rs`
+- Interface stability tests: `contracts/scoregate-score/src/test_interface.rs`
 - Batch Attestation spec: [`docs/batch-attestation-spec.md`](batch-attestation-spec.md)
-- Batch Attestation tests: `contracts/ledgerlens-score/src/test_batch_attestation.rs`
-- Contract source: `contracts/ledgerlens-score/src/lib.rs`
+- Batch Attestation tests: `contracts/scoregate-score/src/test_batch_attestation.rs`
+- Contract source: `contracts/scoregate-score/src/lib.rs`

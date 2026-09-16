@@ -7,7 +7,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Modeled on the existing Criterion suites under `contracts/ledgerlens-score/benches/` (e.g.
+        Modeled on the existing Criterion suites under `contracts/scoregate-score/benches/` (e.g.
         `batch_submit.rs`, `rent_sweep.rs`, `batch_attested.rs`) and [`docs/wasm-size-budget.md`](../../docs/wasm-size-budget.md).
         The goal is a number a future PR can be compared against, not a one-off measurement that's forgotten.
 
@@ -38,8 +38,8 @@ body:
     attributes:
       label: Relevant files
       placeholder: |
-        contracts/ledgerlens-score/benches/<name>.rs (new or extended)
-        contracts/ledgerlens-score/src/constants.rs (the MAX_* bound being measured against)
+        contracts/scoregate-score/benches/<name>.rs (new or extended)
+        contracts/scoregate-score/src/constants.rs (the MAX_* bound being measured against)
     validations:
       required: true
 
@@ -59,7 +59,7 @@ body:
     attributes:
       label: Expected work
       options:
-        - label: Benchmark added under contracts/ledgerlens-score/benches/ using Criterion, following the existing bench files' structure and naming.
+        - label: Benchmark added under contracts/scoregate-score/benches/ using Criterion, following the existing bench files' structure and naming.
           required: true
         - label: Measures cost at multiple input sizes, explicitly including the worst case named above (the MAX_* cap itself, not just a value close to it).
           required: true

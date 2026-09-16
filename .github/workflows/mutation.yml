@@ -102,7 +102,7 @@ jobs:
               --timeout 300 \
               --output ../../../mutants-report-${{ matrix.shard }}
           fi
-        working-directory: contracts/ledgerlens-score
+        working-directory: contracts/scoregate-score
         continue-on-error: true
 
       # ── Shard B: upgrade governance ────────────────────────────────────────
@@ -149,7 +149,7 @@ jobs:
           name: mutation-report-${{ matrix.shard }}-${{ github.run_id }}
           path: |
             mutants-report-${{ matrix.shard }}/
-            contracts/ledgerlens-score/mutants.out
+            contracts/scoregate-score/mutants.out
           retention-days: 30
           if-no-files-found: warn
 

@@ -3,7 +3,7 @@ set -euo pipefail
 
 TOP=10
 OUTPUT=""
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -32,7 +32,7 @@ done
 
 if [[ ! -f "$WASM_PATH" ]]; then
   echo "WASM binary not found at $WASM_PATH. Building..."
-  cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score
+  cargo build --target wasm32-unknown-unknown --release -p scoregate-score
 fi
 
 if ! command -v twiggy &> /dev/null; then
@@ -41,7 +41,7 @@ if ! command -v twiggy &> /dev/null; then
 fi
 
 generate_report() {
-  echo "# WASM Binary Size Report: ledgerlens-score.wasm"
+  echo "# WASM Binary Size Report: scoregate-score.wasm"
   echo ""
   echo "Binary: $WASM_PATH"
   echo "Binary Size: $(wc -c < "$WASM_PATH" | tr -d ' ') bytes"

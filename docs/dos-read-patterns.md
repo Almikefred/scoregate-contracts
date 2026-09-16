@@ -1,7 +1,7 @@
 # Resource Denial-of-Service Tests — Hostile Read Patterns
 
 **Tracks issue:** #760  
-**Test file:** [`contracts/ledgerlens-score/src/test_dos_read_patterns.rs`](../contracts/ledgerlens-score/src/test_dos_read_patterns.rs)
+**Test file:** [`contracts/scoregate-score/src/test_dos_read_patterns.rs`](../contracts/scoregate-score/src/test_dos_read_patterns.rs)
 
 This document describes the hostile read patterns exercised in the DoS test
 suite and explains the bounded behaviour that each test verifies.

@@ -1,6 +1,6 @@
-# Operator Alert Rules for LedgerLens Contract Events
+# Operator Alert Rules for ScoreGate Contract Events
 
-This document provides concrete alert thresholds and severity levels for production operators monitoring the LedgerLens smart contract. All rules are derived from contract events and enable proactive detection of anomalies.
+This document provides concrete alert thresholds and severity levels for production operators monitoring the ScoreGate smart contract. All rules are derived from contract events and enable proactive detection of anomalies.
 
 ## Alert Architecture
 
@@ -276,16 +276,16 @@ Each alert includes:
 
 ```yaml
 groups:
-- name: ledgerlens-operators
+- name: scoregate-operators
   rules:
   
   # Critical: Contract Paused
-  - alert: LedgerLensPaused
+  - alert: ScoreGatePaused
     expr: contract_events{event="paused"} > 0
     for: 1m
     severity: critical
     annotations:
-      summary: "LedgerLens contract is paused"
+      summary: "ScoreGate contract is paused"
       action: "Verify pause reason with admin; check for rejections"
   
   # Warning: Batch Rejection Spike
@@ -379,5 +379,5 @@ event_stream watch --topic="upg_*" --alert-on=all
 
 For alert rule questions or to report false positives:
 1. Check the [Operator FAQ](./operator-faq.md)
-2. Review event schema in [contracts/ledgerlens-score/src/events.rs](../contracts/ledgerlens-score/src/events.rs)
+2. Review event schema in [contracts/scoregate-score/src/events.rs](../contracts/scoregate-score/src/events.rs)
 3. File an issue with event logs and context

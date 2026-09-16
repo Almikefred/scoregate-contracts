@@ -4,16 +4,16 @@
 
 ## Context
 
-`ledgerlens-score` (`contracts/ledgerlens-score/src/lib.rs`, ~10.5k lines, 271
-public functions) and `ledgerlens-aggregator`
-(`contracts/ledgerlens-aggregator/src/lib.rs`, ~385 lines, 15 public
+`scoregate-score` (`contracts/scoregate-score/src/lib.rs`, ~10.5k lines, 271
+public functions) and `scoregate-aggregator`
+(`contracts/scoregate-aggregator/src/lib.rs`, ~385 lines, 15 public
 functions) have grown asymmetrically. It is not documented anywhere which
 contract *should* own a given piece of behavior, which makes it easy for new
 features to land in the wrong layer.
 
 ## Current responsibilities
 
-**`ledgerlens-score` (per-shard contract)**
+**`scoregate-score` (per-shard contract)**
 - Source of truth for wallet/asset-pair risk scores: `submit_score`,
   `submit_scores_batch`, `submit_scores_batch_attested`, consensus
   commit/reveal (`commit_consensus`, `reveal_consensus`,
@@ -25,7 +25,7 @@ features to land in the wrong layer.
   parameter timelock, rate limiting, embargo, pause.
 - Its own risk-gate evaluation: `query_risk_gate` (single-shard opinion).
 
-**`ledgerlens-aggregator` (fan-out/registry contract)**
+**`scoregate-aggregator` (fan-out/registry contract)**
 - Shard registry: `add_shard`, `remove_shard`, `get_shards`.
 - Cross-shard read fan-out: `get_score`, `get_aggregate_score`,
   `get_score_across_shards`, `contagion_depth_across_shards`.
@@ -56,7 +56,7 @@ features to land in the wrong layer.
    asymmetry, not an oversight: the shard registry is low-frequency
    infrastructure config, not a risk parameter.
 3. **New score-derived analytics (e.g. portfolio VaR, pair correlation)
-   belong in `ledgerlens-score`,** even when the primary consumer is
+   belong in `scoregate-score`,** even when the primary consumer is
    cross-shard, because the underlying data and its access controls
    (embargo, privacy epsilon, rate limits) live there. The aggregator should
    only add a cross-shard *composition* of an already-existing per-shard
@@ -64,18 +64,18 @@ features to land in the wrong layer.
 
 ## Future migration criteria
 
-Move a capability from `ledgerlens-score` to `ledgerlens-aggregator` (or a new
+Move a capability from `scoregate-score` to `scoregate-aggregator` (or a new
 contract) only when **all** of the following hold:
 - The capability is a pure function of data already exposed by existing
   per-shard public functions (no new storage reads inside the score
   contract).
 - It requires no privileged/admin state — the aggregator's registry has no
   timelock/multisig machinery today, so anything requiring that governance
-  must stay in `ledgerlens-score` until such machinery is added there too.
+  must stay in `scoregate-score` until such machinery is added there too.
 - Moving it does not change fail-open/fail-closed behavior for existing
   callers (see the risk-gate precedent from issue #411).
 
-Move a capability from `ledgerlens-aggregator` into `ledgerlens-score` only if
+Move a capability from `scoregate-aggregator` into `scoregate-score` only if
 it stops being a cross-shard composition and becomes single-shard state.
 
 For configuration-style reads that can diverge across shards, see

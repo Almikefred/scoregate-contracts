@@ -1,7 +1,7 @@
 # Recovery & Reconciliation Tool
 
 Off-chain post-incident snapshot, reconciliation, backup, and post-action
-verification tooling for the LedgerLens score contract.
+verification tooling for the ScoreGate score contract.
 
 ## Overview
 

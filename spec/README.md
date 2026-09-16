@@ -1,6 +1,6 @@
-# LedgerLens TLA+ Specification
+# ScoreGate TLA+ Specification
 
-This directory contains a formal specification of the LedgerLens smart contract's state machine written in TLA+. The specification models score writes, the embargo gate, breach counter, risk band state, the delegation chain, the **adaptive rate-limit token bucket** (issue #405), and the **M-of-N consensus commit-reveal flow** (issue #403).
+This directory contains a formal specification of the ScoreGate smart contract's state machine written in TLA+. The specification models score writes, the embargo gate, breach counter, risk band state, the delegation chain, the **adaptive rate-limit token bucket** (issue #405), and the **M-of-N consensus commit-reveal flow** (issue #403).
 
 ## Invariants Modelled
 
@@ -28,7 +28,7 @@ The following critical invariants are encoded and verified by TLC.
 
 ### Consensus Commit-Reveal Invariants (new — issue #403)
 
-These invariants model the `commit_consensus` / `reveal_consensus` K-of-N agreement-within-epsilon flow from `contracts/ledgerlens-score/src/lib.rs`.
+These invariants model the `commit_consensus` / `reveal_consensus` K-of-N agreement-within-epsilon flow from `contracts/scoregate-score/src/lib.rs`.
 
 11. **FinalScoreRequiresKReveals** (`INV-CR-1`): A value can only be written as the consensus result when at least `CONSENSUS_K` valid reveals exist **and** at least `CONSENSUS_K` of those revealed scores lie within `CONSENSUS_EPSILON` of the final score. This is the primary safety invariant: no smaller quorum can produce a finalized score.
 
@@ -116,7 +116,7 @@ These properties prove that a valid submission is *not* blocked forever. Under t
 
 ## Model-Check Results
 
-The model was checked with TLC using the configuration in [`LedgerLens.cfg`](LedgerLens.cfg).
+The model was checked with TLC using the configuration in [`ScoreGate.cfg`](ScoreGate.cfg).
 
 ### Model parameters
 
@@ -149,7 +149,7 @@ curl -L -o tla2tools.jar \
   https://github.com/tlaplus/tlaplus/releases/download/v1.8.0/tla2tools.jar
 
 # Run TLC Simulation Mode
-java -XX:+UseParallelGC -jar tla2tools.jar -simulate num=20000 -depth 30 -config LedgerLens.cfg LedgerLens.tla
+java -XX:+UseParallelGC -jar tla2tools.jar -simulate num=20000 -depth 30 -config ScoreGate.cfg ScoreGate.tla
 ```
 
 Expected output: `Finished in ... Simulation using seed ...` with 0 errors.
@@ -171,16 +171,16 @@ Expected output: `Finished in ... Simulation using seed ...` with 0 errors.
 
 ### Invariant violations and bug reports
 
-Any invariant violation TLC produces should be converted into a Rust regression test targeting `contracts/ledgerlens-score/src/` and filed as a bug against the Rust implementation — **not** silently patched in the spec alone. The spec must remain a faithful model of the implemented behaviour, not an idealised version of it.
+Any invariant violation TLC produces should be converted into a Rust regression test targeting `contracts/scoregate-score/src/` and filed as a bug against the Rust implementation — **not** silently patched in the spec alone. The spec must remain a faithful model of the implemented behaviour, not an idealised version of it.
 
 ## References
 
-- `spec/LedgerLens.tla` — The abstract TLA+ specification
-- `spec/LedgerLens.cfg` — TLC model-checking configuration
+- `spec/ScoreGate.tla` — The abstract TLA+ specification
+- `spec/ScoreGate.cfg` — TLC model-checking configuration
 - [`spec/refinement-mapping.md`](refinement-mapping.md) — **Refinement mapping: how Rust storage keys and structs correspond to TLA+ variables** (issue #754)
-- `contracts/ledgerlens-score/src/types.rs` — All storage key enums (`DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD`)
-- `contracts/ledgerlens-score/src/storage.rs` — Storage read/write helpers
-- `contracts/ledgerlens-score/src/constants.rs` — Numeric constants referenced by the spec
+- `contracts/scoregate-score/src/types.rs` — All storage key enums (`DataKey`, `DataKeyB`, `DataKeyC`, `DataKeyD`)
+- `contracts/scoregate-score/src/storage.rs` — Storage read/write helpers
+- `contracts/scoregate-score/src/constants.rs` — Numeric constants referenced by the spec
 - `docs/storage-layout.md` — Exhaustive storage layout reference
 
 ## Automated CI Verification
@@ -190,7 +190,7 @@ TLC model checking is automated in Continuous Integration via the `spec-model-ch
 The CI job:
 1. Provisions Java 17 Temurin runtime.
 2. Downloads and caches the official `tla2tools.jar` (v1.8.0).
-3. Executes TLC across the formal specification `spec/LedgerLens.tla` with `spec/LedgerLens.cfg`.
+3. Executes TLC across the formal specification `spec/ScoreGate.tla` with `spec/ScoreGate.cfg`.
 4. Automatically fails on any parse errors, deadlock, or invariant/temporal property violations on all pull requests and pushes to `main`.
 
 ## How to Install and Run TLC
@@ -221,7 +221,7 @@ brew install openjdk
 
 2. Run the TLC model checker on the specification using the configuration file:
    ```bash
-   java -XX:+UseParallelGC -jar tla2tools.jar -simulate num=20000 -depth 30 -config LedgerLens.cfg LedgerLens.tla
+   java -XX:+UseParallelGC -jar tla2tools.jar -simulate num=20000 -depth 30 -config ScoreGate.cfg ScoreGate.tla
    ```
 
 ### Output

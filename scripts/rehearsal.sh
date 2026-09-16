@@ -37,8 +37,8 @@ NETWORK="${NETWORK:-testnet}"
 ADMIN_IDENTITY="${ADMIN_IDENTITY:-rehearsal-admin}"
 SERVICE_ADDRESS="${SERVICE_ADDRESS:-$(soroban keys address "$ADMIN_IDENTITY" 2>/dev/null || echo "GBPLP...MISSING")}"
 
-WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.wasm"
-OPT_WASM_PATH="target/wasm32-unknown-unknown/release/ledgerlens_score.optimized.wasm"
+WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.wasm"
+OPT_WASM_PATH="target/wasm32-unknown-unknown/release/scoregate_score.optimized.wasm"
 
 TIMESTAMP=$(date +%s)
 SNAPSHOT_PRE="/tmp/rehearsal-snapshot-pre-${TIMESTAMP}.json"
@@ -63,7 +63,7 @@ run() {
 # ── Step 0: Build contract ───────────────────────────────────────────────────
 
 log "Building contract WASM..."
-run cargo build --target wasm32-unknown-unknown --release -p ledgerlens-score
+run cargo build --target wasm32-unknown-unknown --release -p scoregate-score
 run soroban contract optimize --wasm "$WASM_PATH"
 
 # ── Step 1: Deploy ───────────────────────────────────────────────────────────

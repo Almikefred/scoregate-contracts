@@ -21,7 +21,7 @@ def fetch_events(rpc_url, contract_id, start_ledger, limit=100):
 
     headers = {
         "Content-Type": "application/json",
-        "User-Agent": "LedgerLens-Replay-PoC/1.0"
+        "User-Agent": "ScoreGate-Replay-PoC/1.0"
     }
 
     while True:

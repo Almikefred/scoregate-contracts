@@ -1,6 +1,6 @@
 #![no_std]
 
-//! Minimal mock lending protocol used to exercise LedgerLens's
+//! Minimal mock lending protocol used to exercise ScoreGate's
 //! confidence-aware composability primitive (`docs/interface-spec.md` §1.2)
 //! from a genuinely separate, independently deployed contract.
 //!
@@ -14,7 +14,7 @@
 //! the score is stale, the oracle is silent, or the protocol's own pause state
 //! is active.
 
-use ledgerlens_score::LedgerLensScoreContractClient;
+use scoregate_score::ScoreGateScoreContractClient;
 use soroban_sdk::{contract, contracterror, contractimpl, contracttype, Address, Env, Symbol};
 
 #[contracttype]
@@ -30,7 +30,7 @@ pub enum FailPolicy {
 pub enum MockLendingError {
     /// `initialize` has not been called yet.
     NotConfigured = 1,
-    /// LedgerLens's `query_risk_gate_with_confidence` returned `false` for
+    /// ScoreGate's `query_risk_gate_with_confidence` returned `false` for
     /// this wallet — either too risky, no score, or insufficient confidence.
     RiskGateRejected = 2,
     /// Borrow amount must be positive.
@@ -44,8 +44,8 @@ pub enum MockLendingError {
 #[contracttype]
 enum DataKey {
     Admin,
-    /// Contract ID of the LedgerLens score registry this market trusts.
-    LedgerLens,
+    /// Contract ID of the ScoreGate score registry this market trusts.
+    ScoreGate,
     /// Risk-gate threshold (0-100) this market enforces on borrows.
     GateThreshold,
     /// Minimum confidence (0-100) this market requires of the score backing
@@ -62,24 +62,24 @@ pub struct MockLending;
 
 #[contractimpl]
 impl MockLending {
-    /// One-time wiring: record the LedgerLens deployment plus the risk
+    /// One-time wiring: record the ScoreGate deployment plus the risk
     /// threshold and confidence floor this market enforces.
     pub fn initialize(
         env: Env,
         admin: Address,
-        ledgerlens: Address,
+        scoregate: Address,
         gate_threshold: u32,
         min_confidence: u32,
     ) {
         admin.require_auth();
         env.storage().instance().set(&DataKey::Admin, &admin);
-        env.storage().instance().set(&DataKey::LedgerLens, &ledgerlens);
+        env.storage().instance().set(&DataKey::ScoreGate, &scoregate);
         env.storage().instance().set(&DataKey::GateThreshold, &gate_threshold);
         env.storage().instance().set(&DataKey::MinConfidence, &min_confidence);
         env.storage().instance().set(&DataKey::FailPolicy, &FailPolicy::FailClosed);
         env.storage().instance().set(&DataKey::MaxStalenessSecs, &604_800u64);
         env.storage().instance().set(&DataKey::RequiredOracleVersion, &0u32);
-        let client = LedgerLensScoreContractClient::new(&env, &ledgerlens);
+        let client = ScoreGateScoreContractClient::new(&env, &scoregate);
         let expanded_score = matches!(client.try_get_version(), Ok(Ok(version)) if version >= 5);
         env.storage().instance().set(&DataKey::ExpandedRiskScore, &expanded_score);
     }
@@ -120,7 +120,7 @@ impl MockLending {
     }
 
     /// Attempt a borrow for `user` against `asset_pair`. Rejected with
-    /// `RiskGateRejected` whenever LedgerLens's
+    /// `RiskGateRejected` whenever ScoreGate's
     /// `query_risk_gate_with_confidence` says the wallet's score is too
     /// risky, missing, or not backed by enough confidence — even if the raw
     /// risk score itself would otherwise pass. Callers that care about
@@ -135,10 +135,10 @@ impl MockLending {
             return Err(MockLendingError::InvalidAmount);
         }
 
-        let ledgerlens: Address = env
+        let scoregate: Address = env
             .storage()
             .instance()
-            .get(&DataKey::LedgerLens)
+            .get(&DataKey::ScoreGate)
             .ok_or(MockLendingError::NotConfigured)?;
         let gate_threshold: u32 = env
             .storage()
@@ -157,7 +157,7 @@ impl MockLending {
         let required_oracle_version: u32 =
             env.storage().instance().get(&DataKey::RequiredOracleVersion).unwrap_or(0);
 
-        let client = LedgerLensScoreContractClient::new(&env, &ledgerlens);
+        let client = ScoreGateScoreContractClient::new(&env, &scoregate);
         if required_oracle_version > 0 {
             match client.try_get_contract_version() {
                 Ok(Ok(version)) if version >= required_oracle_version => {}

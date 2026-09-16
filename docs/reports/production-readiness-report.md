@@ -4,7 +4,7 @@ Run ID: pending
 
 Generated UTC: pending
 
-Repository: Ledger-Lenz/Ledgerlens-contract
+Repository: Ledger-Lenz/scoregate-contract
 
 Commit: pending
 

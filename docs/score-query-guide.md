@@ -2,7 +2,7 @@
 
 ## Overview
 
-LedgerLens exposes multiple query functions for different use cases. Choosing the wrong one has consequences for gas cost, correctness, and staleness tolerance. This guide shows you how to pick the right function.
+ScoreGate exposes multiple query functions for different use cases. Choosing the wrong one has consequences for gas cost, correctness, and staleness tolerance. This guide shows you how to pick the right function.
 
 - **`get_score`** → Latest raw score, extends TTL, fails with error if not found
 - **`get_effective_score`** → Score with staleness filtering applied, extends TTL, fails with error if not found or embargoed

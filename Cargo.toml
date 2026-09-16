@@ -1,9 +1,9 @@
 [workspace]
 resolver = "2"
 members = [
-    "contracts/ledgerlens-score",
-    "contracts/ledgerlens-aggregator",
-    "contracts/ledgerlens-test-support",
+    "contracts/scoregate-score",
+    "contracts/scoregate-aggregator",
+    "contracts/scoregate-test-support",
     "contracts/mock-amm",
     "contracts/mock-lending",
     "tools/replay",

@@ -5,9 +5,9 @@
 
 ## Overview
 
-Every public entry point in `ledgerlens-score` is measured by the Criterion
+Every public entry point in `scoregate-score` is measured by the Criterion
 benchmark suite in
-`contracts/ledgerlens-score/benches/entry_point_budgets.rs`.
+`contracts/scoregate-score/benches/entry_point_budgets.rs`.
 
 Budgets are expressed as **soroban-sdk test-environment units**:
 
@@ -22,7 +22,7 @@ anchors for CI.
 Run the benchmarks:
 
 ```bash
-cargo bench -p ledgerlens-score --bench entry_point_budgets
+cargo bench -p scoregate-score --bench entry_point_budgets
 ```yaml
 
 ---
@@ -92,7 +92,7 @@ new numbers in this document, and document the delta in the PR description.
 | `get_expiring_entries` | `MAX_TRACKED_SCORE_ENTRIES` (500) in index | O(entries) early-exit |
 
 For batch worst-case profiles (rejected, attested, mixed) see
-[`benches/batch_worst_case_profiles.rs`](../contracts/ledgerlens-score/benches/batch_worst_case_profiles.rs)
+[`benches/batch_worst_case_profiles.rs`](../contracts/scoregate-score/benches/batch_worst_case_profiles.rs)
 and issue #757.
 
 ---

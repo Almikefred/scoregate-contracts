@@ -1,6 +1,6 @@
 # Score Aggregation Mathematics
 
-This document describes the mathematical formulas, fixed-point representation, and integer arithmetic used in LedgerLens score aggregation. Off-chain simulators must use identical integer arithmetic and truncation behavior to match on-chain results.
+This document describes the mathematical formulas, fixed-point representation, and integer arithmetic used in ScoreGate score aggregation. Off-chain simulators must use identical integer arithmetic and truncation behavior to match on-chain results.
 
 ---
 
@@ -8,7 +8,7 @@ This document describes the mathematical formulas, fixed-point representation, a
 
 ### Scale Factor
 
-All fractional values in LedgerLens are represented as integers scaled by a fixed multiplier:
+All fractional values in ScoreGate are represented as integers scaled by a fixed multiplier:
 
 ```
 SCALE = 1,000,000  (10^6)
@@ -367,7 +367,7 @@ Different asset categories (stablecoins, volatile assets, thin markets, high-val
 1. If the pair has been assigned a class via `set_pair_asset_class(pair, class)` **and** that class has an override via `set_asset_class_policy(class, risk_threshold)`, the class override is returned.
 2. Otherwise, the global `risk_threshold` (set via `set_risk_threshold`) is returned.
 
-Lookup is a pure function of on-chain storage — same inputs always produce the same result — and pairs with no assigned class, or classes with no configured override, safely fall back to the global default rather than erroring. See `contracts/ledgerlens-score/src/test_asset_class_policy.rs` for fixtures covering the default-fallback and override-resolution paths.
+Lookup is a pure function of on-chain storage — same inputs always produce the same result — and pairs with no assigned class, or classes with no configured override, safely fall back to the global default rather than erroring. See `contracts/scoregate-score/src/test_asset_class_policy.rs` for fixtures covering the default-fallback and override-resolution paths.
 
 ---
 
@@ -397,7 +397,7 @@ Fixed-point representation with `SCALE = 10^6` provides 6 decimal places. Values
 
 ## Cross-Reference: Formula Documentation in Source Code
 
-The following functions in `contracts/ledgerlens-score/src/lib.rs` reference this document:
+The following functions in `contracts/scoregate-score/src/lib.rs` reference this document:
 
 - **`get_aggregate_score` (line ~1850):** See [§ Weighted Average](#weighted-average) for the formula and fixed-point implementation notes.
 - **`get_effective_score` (line ~1601):** See [§ Staleness and Filtering](#staleness-and-filtering) and [§ Exponential Decay](#exponential-decay) for staleness filtering and decay logic.
@@ -450,7 +450,7 @@ score changes in predictable, monotone directions.
 ### Test Coverage
 
 Monotonicity properties are verified in
-`contracts/ledgerlens-score/src/test_monotonicity_reweight.rs` using
+`contracts/scoregate-score/src/test_monotonicity_reweight.rs` using
 deterministic unit tests with explicit expected values for each property.
 
 ---
@@ -521,7 +521,7 @@ Where `global_min_confidence` is the admin-controlled floor set via
 ### Test Coverage
 
 Truth tables are verified row-by-row in
-`contracts/ledgerlens-score/src/test_confidence_floor_truth_tables.rs`.
+`contracts/scoregate-score/src/test_confidence_floor_truth_tables.rs`.
 
 ---
 
@@ -573,9 +573,9 @@ deterministically at submission time.
 ### Test Coverage
 
 Model-version policy compatibility is verified in
-`contracts/ledgerlens-score/src/test_model_version_policy_compat.rs`.
+`contracts/scoregate-score/src/test_model_version_policy_compat.rs`.
 Existing lifecycle tests live in
-`contracts/ledgerlens-score/src/test_model_version.rs`.
+`contracts/scoregate-score/src/test_model_version.rs`.
 
 ---
 
@@ -638,7 +638,7 @@ if delta > jump_threshold:
 ### Test Coverage
 
 Drift boundary conditions are verified in
-`contracts/ledgerlens-score/src/test_bounded_drift.rs`, covering within-threshold,
+`contracts/scoregate-score/src/test_bounded_drift.rs`, covering within-threshold,
 at-boundary, one-above-boundary, drops, first-submission, configurable threshold,
 and counter increment cases.
 
@@ -647,6 +647,6 @@ and counter increment cases.
 ## References
 
 - **Interface specification:** [`docs/interface-spec.md`](interface-spec.md)
-- **Contract source:** `contracts/ledgerlens-score/src/lib.rs`
-- **Constants:** `contracts/ledgerlens-score/src/constants.rs`
+- **Contract source:** `contracts/scoregate-score/src/lib.rs`
+- **Constants:** `contracts/scoregate-score/src/constants.rs`
 
