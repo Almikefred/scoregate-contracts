@@ -832,3 +832,6 @@ Contributions are welcome. ScoreGate is an open-source public good built for the
 
 <!-- handsoff-issue-73 -->
 - #73: #23 — Temporary Storage Eviction Risk for Sealed Dispute Commitments Across Ledger Boundaries
+
+<!-- handsoff-issue-74 -->
+- #74: #24 — Missing Score Floor Update Interval Check in resolve_dispute_admin
