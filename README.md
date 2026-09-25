@@ -835,3 +835,6 @@ Contributions are welcome. ScoreGate is an open-source public good built for the
 
 <!-- handsoff-issue-74 -->
 - #74: #24 — Missing Score Floor Update Interval Check in resolve_dispute_admin
+
+<!-- handsoff-issue-75 -->
+- #75: #25 — cancel_pending_score Emits Legacy Admin Address Instead of Acting Multi-Signature Signers
