@@ -838,3 +838,6 @@ Contributions are welcome. ScoreGate is an open-source public good built for the
 
 <!-- handsoff-issue-75 -->
 - #75: #25 — cancel_pending_score Emits Legacy Admin Address Instead of Acting Multi-Signature Signers
+
+<!-- handsoff-issue-76 -->
+- #76: #26 — Admin Two-Step Transfer Is Ineffective and Ignored Under Multisig Governance
